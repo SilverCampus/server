@@ -39,7 +39,7 @@ class Course(models.Model):
 class Video(models.Model):
     title = models.CharField(max_length=100)
     video_file = models.FileField(upload_to='videos/')  # 실제 영상 파일을 저장할 필드
-
+    course = models.ForeignKey(Course,related_name='video' , on_delete=models.CASCADE)
     def __str__(self):
         return self.title
 
