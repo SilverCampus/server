@@ -34,12 +34,15 @@ class Course(models.Model):
     instructor = models.ForeignKey(Instructor, related_name='course', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, related_name='course' , on_delete=models.CASCADE)
 
+    def __str__(self):
+        return self.title
+
 
 # 비디오 릴레이션
 class Video(models.Model):
     title = models.CharField(max_length=100)
     video_file = models.FileField(upload_to='videos/')  # 실제 영상 파일을 저장할 필드
-    course = models.ForeignKey(Course,related_name='video' , on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name='video', on_delete=models.CASCADE)
     def __str__(self):
         return self.title
 
@@ -49,7 +52,7 @@ class Like(models.Model):
     user = models.ForeignKey(User, related_name='like', on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.user}의 {self.course}에 대한 좋아요"
+        return f"{self.user}의 {self.course}에 대한 좋아요" 
 
 # 등록 릴레이션
 class Enroll(models.Model):
