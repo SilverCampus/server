@@ -1,23 +1,26 @@
 from rest_framework import serializers
-from .models import Category, Instructor, Course, Video, Like, Enroll, Comment, Question
 from django.contrib.auth import get_user_model
-from rest_framework import serializers
-from .models import Course, Category, Instructor, Video, Like, Enroll, Comment, Question
+from campus.models import Course, Category, Instructor, Video, Like, Enroll, Comment, Question, User
 
-User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+class UserRegisterSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True)
     class Meta:
         model = User
-        fields = ('id', 'username', 'email', 'password', 'address', 'phone', 'birth_date', 'nickname')
-        extra_kwargs = {'password': {'write_only': True}}
+        fields = ('id', 'username', 'password', 'email', 'address', 'phone', 'birth_date', 'nickname')
 
     def create(self, validated_data):
-        password = validated_data.pop('password')
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
+        user = User.objects.create_user(
+            username=validated_data['username'],
+            password=validated_data['password'],
+            email=validated_data.get('email', ''),
+            address=validated_data.get('address', ''),
+            phone=validated_data.get('phone', ''),
+            birth_date=validated_data.get('birth_date'),
+            nickname=validated_data.get('nickname', '')
+        )
         return user
+
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -66,8 +69,25 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-# api 만들 때 쓰는 별도 시리얼라이즈
+
+#######  api 앱에서 쓰는 view 만들 때 쓰는 별도 시리얼라이즈들 ########
+
+# class UserRegisterSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = User
+#         fields = '__all__'
+
+class SearchCoursesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'
+
 class CourseVideoListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
-        fields = '__all__'        
+        fields = '__all__'  
+
+class PurchasedCoursesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'       
