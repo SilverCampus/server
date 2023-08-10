@@ -1,4 +1,5 @@
-from campus.serializers import UserSerializer
+from campus.serializers import UserSerializer, CourseSerializer
+from campus.models import *
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -38,3 +39,21 @@ def login(request):
     # return Response(status=status.HTTP_401_UNAUTHORIZED)
     return Response({"message": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
 
+
+# 검색어 입력하면 해당 검색어가 포함된 Course 모델의 인스턴스 반환
+@api_view(['GET'])
+@permission_classes((permissions.AllowAny,))
+def search_courses(request):
+    keyword = request.GET.get('keyword') # URL의 쿼리 매개변수에서 'keyword'를 가져옴
+    if keyword is None:
+        return Response({"message": "Keyword is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Course 릴레이션에서 keyword를 포함한 강좌들 가져오기!
+    courses = Course.objects.filter(title__icontains=keyword)
+
+    if not courses.exists(): # 검색 결과가 없을 때 반환할 메세지
+        return Response({"message": "검색 결과가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+
+    # 찾은 객체들을 시리얼라이즈
+    serializer = CourseSerializer(courses, many=True) # 이 부분 프론트엔드 파트가 요구하는 대로 나중에 수정 ㄱ
+    return Response(serializer.data, status=status.HTTP_200_OK)

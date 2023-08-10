@@ -20,7 +20,7 @@ class Category(models.Model):
 class Instructor(models.Model):
     name = models.CharField(max_length=50)
     profile = models.TextField()
-    photo = models.ImageField(upload_to='instructor_photos/', null=True)
+    photo = models.ImageField(upload_to='instructor_photos/', null=True, blank=True)
 
     def __str__(self):
         return self.name
