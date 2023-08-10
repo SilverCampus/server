@@ -9,7 +9,7 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 
-# 검색어 입력하면 해당 검색어가 포함된 Course 모델의 인스턴스 반환하는 API
+# 1. 검색어 입력하면 해당 검색어가 포함된 Course 모델의 인스턴스 반환하는 API
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def search_courses(request):
@@ -28,7 +28,7 @@ def search_courses(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# Course와 연결된 Video list 반환하는 API (GET)
+# 2. Course와 연결된 Video list 반환하는 API (GET)
 class CourseVideoListView(ListAPIView):
     serializer_class = CourseVideoListSerializer
 
@@ -38,7 +38,7 @@ class CourseVideoListView(ListAPIView):
         return Video.objects.filter(course__id = course_id)
 
 
-# 로그인한 사용자가 특정 강좌를 구매하는 API
+# 3. 로그인한 사용자가 특정 강좌를 구매하는 API
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def course_enroll(request):
@@ -62,7 +62,7 @@ def course_enroll(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# 로그인한 사용자가 구매한 강의 목록들 반환하는 API
+# 4. 로그인한 사용자가 구매한 강의 목록들 반환하는 API
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) #로그인한 사용자만 접근 가능
 def purchased_courses(request):
