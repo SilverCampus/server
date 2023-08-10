@@ -1,5 +1,8 @@
-from campus.serializers import UserSerializer, CourseSerializer
 from campus.models import *
+from campus.serializers import UserSerializer, CourseSerializer, CourseVideoListSerializer
+
+from rest_framework.generics import ListAPIView
+
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -57,3 +60,13 @@ def search_courses(request):
     # 찾은 객체들을 시리얼라이즈
     serializer = CourseSerializer(courses, many=True) # 이 부분 프론트엔드 파트가 요구하는 대로 나중에 수정 ㄱ
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# Course와 연결된 Video list 반환하는 뷰 (GET)
+class CourseVideoListView(ListAPIView):
+    serializer_class = CourseVideoListSerializer
+
+    # list 수정하지 않아도, get_queryset() 함수만 오버라이딩 해도 충분!
+    def get_queryset(self):
+        course_id = self.kwargs['course_id']
+        return Video.objects.filter(course__id = course_id)

@@ -64,3 +64,10 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = '__all__'
+
+
+# api 만들 때 쓰는 별도 시리얼라이즈
+class CourseVideoListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Video
+        fields = '__all__'        
