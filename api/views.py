@@ -1,7 +1,8 @@
 from campus.models import *
-from campus.serializers import (UserSerializer, SearchCoursesSerializer, CourseVideoListSerializer, PurchasedCoursesSerializer)
+from campus.serializers import (UserSerializer, SearchCoursesSerializer, 
+                                CourseVideoListSerializer, PurchasedCoursesSerializer, EnrollSerializer)
 
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView
 
 from django.contrib.auth import get_user_model, authenticate
 from rest_framework import permissions, status
@@ -16,7 +17,7 @@ def search_courses(request):
     if keyword is None:
         return Response({"message": "Keyword is required"}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Course 릴레이션에서 keyword를 포함한 강좌들 가져오기!
+    # Course 릴레이션에서 keyword를 포함한 강좌들 리스트로 가져오기!
     courses = Course.objects.filter(title__icontains=keyword)
 
     if not courses.exists(): # 검색 결과가 없을 때 반환할 메세지
@@ -27,7 +28,7 @@ def search_courses(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# Course와 연결된 Video list 반환하는 뷰 (GET)
+# Course와 연결된 Video list 반환하는 API (GET)
 class CourseVideoListView(ListAPIView):
     serializer_class = CourseVideoListSerializer
 
@@ -35,13 +36,31 @@ class CourseVideoListView(ListAPIView):
     def get_queryset(self):
         course_id = self.kwargs['course_id']
         return Video.objects.filter(course__id = course_id)
-    
 
-# 로그인한 사용자가 특정 강의 구매하기
+
+# 로그인한 사용자가 특정 강좌를 구매하는 API
 @api_view(['POST'])
-@permission_classes((permissions.IsAuthenticated,)) #로그인한 사용자만 접근 가능
-def purchased(request):
-    pass
+@permission_classes([permissions.IsAuthenticated])
+def course_enroll(request):
+    course_id = request.POST.get('course_id')
+    if not course_id:
+        return Response({"error": "Course ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+    # 사용자가 로그인한 상태이므로 request.user에서 사용자 정보를 가져옵니다.
+    user = request.user
+    # Enroll 객체를 생성합니다.
+    enroll = Enroll(course=course, user=user)
+    # DB에 저장합니다.
+    enroll.save()
+    # 응답을 위한 Serializer를 사용합니다.
+    serializer = EnrollSerializer(enroll)
+
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
 # 로그인한 사용자가 구매한 강의 목록들 반환하는 API
 @api_view(['GET'])

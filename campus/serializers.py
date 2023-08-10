@@ -91,3 +91,8 @@ class PurchasedCoursesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = '__all__'       
+
+class EnrollSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enroll
+        fields = '__all__'

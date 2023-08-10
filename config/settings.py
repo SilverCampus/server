@@ -47,7 +47,8 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication', # 전역 설정!!
+                # 따라서 view에서 별도로 @authentication_classes([TokenAuthentication]) 안 해줘도 됨!!! 
     ),
 }
 
