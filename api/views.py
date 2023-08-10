@@ -42,7 +42,6 @@ def login(request):
     # return Response(status=status.HTTP_401_UNAUTHORIZED)
     return Response({"message": "Invalid username or password"}, status=status.HTTP_401_UNAUTHORIZED)
 
-
 # 검색어 입력하면 해당 검색어가 포함된 Course 모델의 인스턴스 반환
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
@@ -70,3 +69,6 @@ class CourseVideoListView(ListAPIView):
     def get_queryset(self):
         course_id = self.kwargs['course_id']
         return Video.objects.filter(course__id = course_id)
+    
+
+# 

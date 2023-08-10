@@ -63,11 +63,6 @@ class Enroll(models.Model):
     def __str__(self):
         return  f"{self.user}의 {self.course}에 대한 수업 등록"
 
-# 답변 릴레이션
-class Comment(models.Model):
-    content = models.TextField()
-    instructor = models.ForeignKey(Instructor, related_name='comment', on_delete=models.CASCADE) 
-
 
 # 질문 릴레이션
 class Question(models.Model):
@@ -76,3 +71,13 @@ class Question(models.Model):
 
     def __str__(self):
         return self.title
+    
+
+# 답변 릴레이션
+class Comment(models.Model):
+    content = models.TextField()
+    instructor = models.ForeignKey(Instructor, related_name='comment', on_delete=models.CASCADE) 
+    question = models.ForeignKey(Question, related_name='comment', on_delete=models.CASCADE)    
+
+    def __str__(self):
+        return self.content
