@@ -51,7 +51,7 @@ class CourseVideoListView(ListAPIView):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def course_enroll(request):
-    course_id = request.POST.get('course_id')
+    course_id = request.data.get('course_id')  # request.data가 request.POST보다 일반적
     if not course_id:
         return Response({"error": "Course ID is required"}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -90,7 +90,7 @@ def purchased_courses(request):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def course_like(request):
-    course_id = request.POST.get('course_id')
+    course_id = request.data.get('course_id')   # request.POST에서 request.data로 수정!
     if not course_id:
         return Response({"error": "Course ID is required"}, status=status.HTTP_400_BAD_REQUEST)
     

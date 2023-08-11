@@ -5,13 +5,10 @@ from campus.models import Course, Category, Video, Like, Enroll, Comment, Questi
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
+
     class Meta:
         model = User
-        fields = ('id', 'username', 'password', 'email', 'address', 'phone', 'birth_date', 'nickname')
-
-    # def __init__(self, *args, **kwargs):
-    #     super().__init__(*args, **kwargs)
-    #     self.fields["is_instructor"].required = True  
+        fields = ('id', 'username', 'password', 'email', 'address', 'phone', 'birth_date', 'nickname', 'is_instructor')
 
     def create(self, validated_data):
         user = User.objects.create_user(
@@ -21,7 +18,8 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             address=validated_data.get('address', ''),
             phone=validated_data.get('phone', ''),
             birth_date=validated_data.get('birth_date'),
-            nickname=validated_data.get('nickname', '')
+            nickname=validated_data.get('nickname', ''),
+            is_instructor=validated_data.get('is_instructor', True) # is_instructor 필드 추가
         )
         return user
 

@@ -14,7 +14,7 @@ User = get_user_model()
 class UserRegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegisterSerializer
-
+    
 # 로그인
 class CustomTokenObtainPairView(TokenObtainPairView):
     pass  
