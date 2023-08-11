@@ -5,22 +5,14 @@ from django.contrib.auth.models import  AbstractUser
 class User(AbstractUser):
     address = models.CharField(max_length=100, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
-    birth_date = models.DateField(null=True, blank=True)
-    nickname = models.CharField(max_length=30, null=True, blank=True)
+    birth_date = models.DateField(null=True, blank=True) # 생일
+    nickname = models.CharField(max_length=30, null=True, blank=True) # 사용자의 닉네임
+    is_instructor = models.BooleanField(default=True)  # 슈퍼 유저 만들 때 자동으로 is_instructor True
     
 
 # 카테고리
 class Category(models.Model):
     name = models.CharField(max_length=50)
-
-    def __str__(self):
-        return self.name
-    
-# 강사 릴레이션   
-class Instructor(models.Model):
-    name = models.CharField(max_length=50)
-    profile = models.TextField()
-    photo = models.ImageField(upload_to='instructor_photos/', null=True, blank=True)
 
     def __str__(self):
         return self.name
@@ -31,8 +23,10 @@ class Course(models.Model):
     title = models.CharField(max_length=100)
     price = models.IntegerField()
     description = models.TextField()
-    instructor = models.ForeignKey(Instructor, related_name='course', on_delete=models.CASCADE)
+    instructor = models.ForeignKey(User, related_name='course', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, related_name='course' , on_delete=models.CASCADE)
+    thumbnail = models.CharField(max_length=500, blank=True, null=True) # 나중에 s3 경로 넣어줄 것
+    is_live = models.BooleanField(default=False)
 
     def __str__(self):
         return self.title
@@ -40,8 +34,8 @@ class Course(models.Model):
 
 # 비디오 릴레이션
 class Video(models.Model):
-    title = models.CharField(max_length=100)
-    video_file = models.FileField(upload_to='videos/')  # 실제 영상 파일을 저장할 필드
+    title = models.CharField(max_length=500)
+    video_file = models.CharField(max_length=500)  # 실제 영상 파일을 저장할 필드 s3에!!!
     course = models.ForeignKey(Course, related_name='video', on_delete=models.CASCADE)
     def __str__(self):
         return self.title
@@ -68,6 +62,7 @@ class Enroll(models.Model):
 class Question(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
+    student = models.ForeignKey(User, related_name='question', on_delete=models.CASCADE)
 
     def __str__(self):
         return self.title
@@ -76,7 +71,7 @@ class Question(models.Model):
 # 답변 릴레이션
 class Comment(models.Model):
     content = models.TextField()
-    instructor = models.ForeignKey(Instructor, related_name='comment', on_delete=models.CASCADE) 
+    instructor = models.ForeignKey(User, related_name='comment', on_delete=models.CASCADE) 
     question = models.ForeignKey(Question, related_name='comment', on_delete=models.CASCADE)    
 
     def __str__(self):

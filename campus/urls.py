@@ -7,7 +7,7 @@ from .views import UserRegisterView, CustomTokenObtainPairView
 router = DefaultRouter()
 router.register(r'user', UserViewSet)
 router.register(r'category', CategoryViewSet)
-router.register(r'instructor', InstructorViewSet)
+# router.register(r'instructor', InstructorViewSet)
 router.register(r'course', CourseViewSet)
 router.register(r'video', VideoViewSet)
 router.register(r'like', LikeViewSet)

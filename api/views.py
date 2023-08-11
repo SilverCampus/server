@@ -1,6 +1,8 @@
 from campus.models import *
 from campus.serializers import (UserSerializer, SearchCoursesSerializer, 
-                                CourseVideoListSerializer, PurchasedCoursesSerializer, EnrollSerializer)
+                                CourseVideoListSerializer, PurchasedCoursesSerializer, 
+                                EnrollSerializer, LikeSerializer, LikedCoursesSerializer,
+                                EnrollCourseSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -9,7 +11,10 @@ from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 
+from django.core.exceptions import ObjectDoesNotExist
+
 # 1. 검색어 입력하면 해당 검색어가 포함된 Course 모델의 인스턴스 반환하는 API
+# 추가적으로 카테코리에도 해당되는 거면 다 가져오기!!
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def search_courses(request):
@@ -62,7 +67,7 @@ def course_enroll(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# 4. 로그인한 사용자가 구매한 강의 목록들 반환하는 API
+# 4. 로그인한 사용자가 구매한 강좌 목록들 반환하는 API
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) #로그인한 사용자만 접근 가능
 def purchased_courses(request):
@@ -73,3 +78,97 @@ def purchased_courses(request):
     serializer = PurchasedCoursesSerializer(courses, many=True)
 
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# 5. 로그인한 사용자가 특정 강좌를 찜하는 API
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def course_like(request):
+    course_id = request.POST.get('course_id')
+    if not course_id:
+        return Response({"error": "Course ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
+    # 사용자가 로그인한 상태이므로 request.user에서 사용자 정보를 가져옵니다.
+    user = request.user
+    # Enroll 객체를 생성합니다.
+    like = Like(course=course, user=user)
+    # DB에 저장합니다.
+    like.save()
+    # 응답을 위한 Serializer를 사용합니다.
+    serializer = LikeSerializer(like)
+
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+# 6. 로그인한 사용자가 찜한 강좌 목록들 반환하는 API
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,)) # 로그인한 사용자만 접근 가능
+def liked_courses(request):
+    user = request.user # 로그인한 사용자 객체 얻기
+    likes = Like.objects.filter(user=user)
+
+    courses = [like.course for like in likes]
+    serializer = LikedCoursesSerializer(courses, many=True)
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+# 7. 로그인한 사용자(강사)가 새로운 강좌를 개설하는 하는 API
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def enroll_course(request):
+    user = request.user
+    if not user.is_instructor: # User가 강사가 아니라면
+        print("강사 아님!!")
+        return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 선생님일 때 -> 강좌의 데이터 추출
+    title = request.data.get('title')
+    price = request.data.get('price')
+    description = request.data.get('description')
+    category_name = request.data.get('category')
+    thumbnail = request.data.get('thumbnail')
+    is_live = request.data.get('is_live')
+    
+    # 카테고리 객체 찾기 (예외 처리를 위해 get_object_or_404를 사용할 수도 있음)
+    try:
+        category = Category.objects.get(name=category_name)
+    except ObjectDoesNotExist:
+        return Response({"error": "Category does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+
+    course = Course(
+        title=title,
+        price=price,
+        description=description,
+        instructor=user,  # 강좌의 강사는 현재 로그인해 있는 User
+        category=category,
+        thumbnail=thumbnail,
+        is_live=is_live
+    )
+    course.save()
+
+    # Serializer를 사용해 JSON 응답 생성
+    serializer = EnrollCourseSerializer(course)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+
+# 8. 선생님이 자신이 개설한 강좌에 새로운 영상 파일을 추가하는 API
+
+
+
+
+# 9. 로그인한 학생이 자신이 수강 중은 강좌에 대해 question 등록하는 API
+
+
+
+
+# 10. 선생님이 자신이 개설한 강좌에 대한 question에 comment를 다는 API
+
+
+
+
+# 11. 

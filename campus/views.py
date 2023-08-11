@@ -27,9 +27,9 @@ class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
-class InstructorViewSet(ModelViewSet):
-    queryset = Instructor.objects.all()
-    serializer_class = InstructorSerializer
+# class InstructorViewSet(ModelViewSet):
+#     queryset = Instructor.objects.all()
+#     serializer_class = InstructorSerializer
 
 class CourseViewSet(ModelViewSet):
     queryset = Course.objects.all()

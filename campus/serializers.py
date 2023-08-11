@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from campus.models import Course, Category, Instructor, Video, Like, Enroll, Comment, Question, User
+from campus.models import Course, Category, Video, Like, Enroll, Comment, Question, User
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -8,6 +8,10 @@ class UserRegisterSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'username', 'password', 'email', 'address', 'phone', 'birth_date', 'nickname')
+
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     self.fields["is_instructor"].required = True  
 
     def create(self, validated_data):
         user = User.objects.create_user(
@@ -33,10 +37,10 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
 
-class InstructorSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Instructor
-        fields = '__all__'
+# class InstructorSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Instructor
+#         fields = '__all__'
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -96,3 +100,18 @@ class EnrollSerializer(serializers.ModelSerializer):
     class Meta:
         model = Enroll
         fields = '__all__'
+
+class LikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Like
+        fields = '__all__'
+
+class LikedCoursesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'    
+
+class EnrollCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'               
