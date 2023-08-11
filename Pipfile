@@ -8,6 +8,9 @@ django = "*"
 djangorestframework = "*"
 pillow = "*"
 djangorestframework-simplejwt = "*"
+python-dotenv = "*"
+boto3 = "*"
+django-storages = "*"
 
 [dev-packages]
 

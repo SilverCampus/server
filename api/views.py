@@ -13,6 +13,9 @@ from rest_framework.decorators import api_view, permission_classes
 
 from django.core.exceptions import ObjectDoesNotExist
 
+import boto3
+from django.conf import settings
+
 # 1. 검색어 입력하면 해당 검색어가 포함된 Course 모델의 인스턴스 반환하는 API
 # 추가적으로 카테코리에도 해당되는 거면 다 가져오기!!
 @api_view(['GET'])
@@ -134,9 +137,9 @@ def enroll_course(request):
     title = request.data.get('title')
     price = request.data.get('price')
     description = request.data.get('description')
-    category_name = request.data.get('category')
-    thumbnail = request.data.get('thumbnail')   
-    # thumbnail = request.FILES.get('thumbnail') # 나중에 S3에 저장하는 로직대로 처리해야!!
+    category_name = request.data.get('category')  # 프론트엔드로부터 이름으로 받음. id x
+    # thumbnail = request.data.get('thumbnail')   
+    thumbnail = request.FILES.get('thumbnail') # 나중에 S3에 저장하는 로직대로 처리해야!!
     is_live = request.data.get('is_live')
     
     # 카테고리 객체 찾기 (예외 처리를 위해 get_object_or_404를 사용할 수도 있음)
@@ -146,20 +149,31 @@ def enroll_course(request):
         return Response({"error": "Category does not exist"}, status=status.HTTP_400_BAD_REQUEST)
     
 
-    # 여기에서 이제 S3에 사진 파일을 저장하고 해당 영상 저장 위치 URL을 받아서
-    # 확보 한 뒤 그걸 이 다음 코드인 Course 객체 저장할 때 넣어주기!!
+    # S3 연결
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
+
+    # 파일 경로 지정
+    file_path = 'images/' + str(thumbnail)
+
+    # S3에 업로드
+    s3_client.upload_fileobj(thumbnail, settings.AWS_STORAGE_BUCKET_NAME, file_path, ExtraArgs={'ContentType': 'image/jpeg'})
 
 
+    # S3 URL 생성
+    thumbnail_url = f'{file_path}'
 
 
-    ####################################################################
     course = Course(
         title=title,
         price=price,
         description=description,
         instructor=user,  # 강좌의 강사는 현재 로그인해 있는 User
         category=category,
-        thumbnail=thumbnail,
+        thumbnail=thumbnail_url,
         is_live=is_live
     )
     course.save()
@@ -180,8 +194,8 @@ def video_upload(request):
     
     # 프론트엔드로부터 넘겨받는 정보: title, video_file, course(id)
     title = request.data.get('title')
-    # video_file = request.FILES.get('video_file')  # 여길 나중에 FILES로 바꿔야!!
-    video_file = request.data.get('video_file')
+    video_file = request.FILES.get('video_file')  # 여길 나중에 FILES로 바꿔야!!
+    # video_file = request.data.get('video_file')
     course_id = request.data.get('course')
 
     try: # 해당 강좌 뽑아 오기
@@ -192,19 +206,30 @@ def video_upload(request):
     if course.instructor != user:
         return Response({"error": "Unmatched btw instructor and course"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # 여기에서 이제 S3에 동영상 파일을 저장하고 해당 영상 저장 위치 URL을 받아서
-    # 확보 한 뒤 그걸 이 다음 코드인 Video 객체 저장할 때 넣어주기!!
+    # S3 연결
+    s3_client = boto3.client(
+        's3',
+        aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    )
+
+    # 파일 경로 지정
+    file_path = 'videos/' + str(video_file)
+
+    # S3에 업로드
+    s3_client.upload_fileobj(video_file, settings.AWS_STORAGE_BUCKET_NAME, file_path, ExtraArgs={'ContentType': 'video/mp4'})
 
 
-
-    ####################################################################
+    # S3 URL 생성
+    video_url = f'{file_path}'
 
     video = Video(
-        title = title,
-        video_file = video_file,
-        course = course
+        title=title,
+        video_file=video_url,
+        course=course
     )
     video.save()
+
 
     # Serializer를 사용해 JSON 응답 생성
     serializer = VideoUploadSerializer(video)

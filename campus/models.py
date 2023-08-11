@@ -25,7 +25,7 @@ class Course(models.Model):
     description = models.TextField()
     instructor = models.ForeignKey(User, related_name='course', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, related_name='course' , on_delete=models.CASCADE)
-    thumbnail = models.CharField(max_length=500, blank=True, null=True) # 나중에 s3 경로 넣어줄 것
+    thumbnail = models.FileField(upload_to='images/') 
     is_live = models.BooleanField(default=False)
 
     def __str__(self):
@@ -35,7 +35,7 @@ class Course(models.Model):
 # 비디오 릴레이션
 class Video(models.Model):
     title = models.CharField(max_length=500)
-    video_file = models.CharField(max_length=500)  # 실제 영상 파일을 저장할 필드 s3에!!!
+    video_file = models.FileField(upload_to='videos/')  # 실제 영상 파일을 저장할 필드 s3에!!!
     course = models.ForeignKey(Course, related_name='video', on_delete=models.CASCADE)
     
     def __str__(self):
