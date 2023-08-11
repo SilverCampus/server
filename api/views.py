@@ -2,7 +2,7 @@ from campus.models import *
 from campus.serializers import (UserSerializer, SearchCoursesSerializer, 
                                 CourseVideoListSerializer, PurchasedCoursesSerializer, 
                                 EnrollSerializer, LikeSerializer, LikedCoursesSerializer,
-                                EnrollCourseSerializer)
+                                EnrollCourseSerializer, VideoUploadSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -44,6 +44,7 @@ class CourseVideoListView(ListAPIView):
 
 
 # 3. 로그인한 사용자가 특정 강좌를 구매하는 API
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def course_enroll(request):
@@ -68,6 +69,7 @@ def course_enroll(request):
 
 
 # 4. 로그인한 사용자가 구매한 강좌 목록들 반환하는 API
+
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) #로그인한 사용자만 접근 가능
 def purchased_courses(request):
@@ -81,6 +83,7 @@ def purchased_courses(request):
 
 
 # 5. 로그인한 사용자가 특정 강좌를 찜하는 API
+
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def course_like(request):
@@ -105,6 +108,7 @@ def course_like(request):
 
 
 # 6. 로그인한 사용자가 찜한 강좌 목록들 반환하는 API
+
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) # 로그인한 사용자만 접근 가능
 def liked_courses(request):
@@ -116,13 +120,14 @@ def liked_courses(request):
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
 # 7. 로그인한 사용자(강사)가 새로운 강좌를 개설하는 하는 API
+
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def enroll_course(request):
     user = request.user
     if not user.is_instructor: # User가 강사가 아니라면
-        print("강사 아님!!")
         return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
 
     # 선생님일 때 -> 강좌의 데이터 추출
@@ -130,7 +135,8 @@ def enroll_course(request):
     price = request.data.get('price')
     description = request.data.get('description')
     category_name = request.data.get('category')
-    thumbnail = request.data.get('thumbnail')
+    thumbnail = request.data.get('thumbnail')   
+    # thumbnail = request.FILES.get('thumbnail') # 나중에 S3에 저장하는 로직대로 처리해야!!
     is_live = request.data.get('is_live')
     
     # 카테고리 객체 찾기 (예외 처리를 위해 get_object_or_404를 사용할 수도 있음)
@@ -138,7 +144,15 @@ def enroll_course(request):
         category = Category.objects.get(name=category_name)
     except ObjectDoesNotExist:
         return Response({"error": "Category does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+    
 
+    # 여기에서 이제 S3에 사진 파일을 저장하고 해당 영상 저장 위치 URL을 받아서
+    # 확보 한 뒤 그걸 이 다음 코드인 Course 객체 저장할 때 넣어주기!!
+
+
+
+
+    ####################################################################
     course = Course(
         title=title,
         price=price,
@@ -155,11 +169,47 @@ def enroll_course(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+# 8. 선생님이 자신이 개설한 강좌에 새로운 영상 파일을 추가하는 API (S3 부분 처리해야!!)
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def video_upload(request):
+    user = request.user
 
-# 8. 선생님이 자신이 개설한 강좌에 새로운 영상 파일을 추가하는 API
+    if not user.is_instructor: # User가 강사가 아니라면
+        return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # 프론트엔드로부터 넘겨받는 정보: title, video_file, course(id)
+    title = request.data.get('title')
+    # video_file = request.FILES.get('video_file')  # 여길 나중에 FILES로 바꿔야!!
+    video_file = request.data.get('video_file')
+    course_id = request.data.get('course')
+
+    try: # 해당 강좌 뽑아 오기
+        course = Course.objects.get(id=course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
+
+    if course.instructor != user:
+        return Response({"error": "Unmatched btw instructor and course"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 여기에서 이제 S3에 동영상 파일을 저장하고 해당 영상 저장 위치 URL을 받아서
+    # 확보 한 뒤 그걸 이 다음 코드인 Video 객체 저장할 때 넣어주기!!
 
 
 
+    ####################################################################
+
+    video = Video(
+        title = title,
+        video_file = video_file,
+        course = course
+    )
+    video.save()
+
+    # Serializer를 사용해 JSON 응답 생성
+    serializer = VideoUploadSerializer(video)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
 
 # 9. 로그인한 학생이 자신이 수강 중은 강좌에 대해 question 등록하는 API
 
@@ -171,4 +221,4 @@ def enroll_course(request):
 
 
 
-# 11. 
+# 11. 로그인한 선생님이 자신의 강좌의 description을 수정하는 API

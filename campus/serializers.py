@@ -115,3 +115,9 @@ class EnrollCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = '__all__'               
+
+
+class VideoUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Video
+        fields = '__all__'
