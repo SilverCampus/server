@@ -2,7 +2,7 @@ from campus.models import *
 from campus.serializers import (UserSerializer, SearchCoursesSerializer, 
                                 CourseVideoListSerializer, PurchasedCoursesSerializer, 
                                 EnrollSerializer, LikeSerializer, LikedCoursesSerializer,
-                                EnrollCourseSerializer, VideoUploadSerializer)
+                                EnrollCourseSerializer, VideoUploadSerializer, AskQuestionSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -211,7 +211,45 @@ def video_upload(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 
+
 # 9. 로그인한 학생이 자신이 수강 중은 강좌에 대해 question 등록하는 API
+
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def ask_question(request):
+    user = request.user
+
+    if user.is_instructor: # User가 강사라면 -> 예외처리
+        return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 프론트엔드로부터 넘겨받는 정보: title, content, course(id)
+    title = request.data.get('title')
+    content = request.data.get('content')
+    course_id = request.data.get('course')
+
+    try: # 해당 강좌 뽑아 오기
+        course = Course.objects.get(id=course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    try: # 해당 학생이 넘겨받은 수업 듣고 있는지 체크 -> 아니면 예외처리
+        enroll_check = Enroll.objects.get(course=course, user=user)
+    except Enroll.DoesNotExist:
+        return Response({"error": "User is not enrolled in this course"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+    question = Question(
+        title = title,
+        content = content,
+        student = user,
+        course = course
+    )
+    question.save()
+
+    # Serializer를 사용해 JSON 응답 생성
+    serializer = AskQuestionSerializer(question)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 

@@ -64,6 +64,8 @@ class Question(models.Model):
     title = models.CharField(max_length=100)
     content = models.TextField()
     student = models.ForeignKey(User, related_name='question', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name='question', on_delete=models.CASCADE)
+
 
     def __str__(self):
         return self.title
