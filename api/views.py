@@ -2,7 +2,8 @@ from campus.models import *
 from campus.serializers import (UserSerializer, SearchCoursesSerializer, 
                                 CourseVideoListSerializer, PurchasedCoursesSerializer, 
                                 EnrollSerializer, LikeSerializer, LikedCoursesSerializer,
-                                LaunchCourseSerializer, VideoUploadSerializer, AskQuestionSerializer)
+                                LaunchCourseSerializer, VideoUploadSerializer, AskQuestionSerializer,
+                                AnswerQuestionSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -283,40 +284,41 @@ def ask_question(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# # 10. 로그인한 선생님이 자신이 개설한 강좌에 대한 question에 comment를 다는 API
-# @api_view(['POST'])
-# @permission_classes((permissions.IsAuthenticated,))
-# def answer_question(request):   # 프론트로부터 넘겨받아야 할 정보: question_id, content(답글 내용)
-#     user = request.user
+# 10. 로그인한 선생님이 자신이 개설한 강좌에 대한 question에 comment를 달아주는 API
 
-#     if not user.is_instructor: # User가 강사가 아니라면 -> 예외처리
-#         return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def answer_question(request):   # 프론트로부터 넘겨 받아야 할 정보: question_id, content(답글 내용)
+    user = request.user
+
+    if not user.is_instructor: # User가 강사가 아니라면 -> 예외처리
+        return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
     
-#     question_id = request.data.get('question_id')
-#     content = request.data.get('content')
+    question_id = request.data.get('question_id')
+    content = request.data.get('content')
 
+    # 해당 질문 객체 뽑아 오기
+    try:
+        question = Question.objects.get(id=question_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "There is no that question"}, status=status.HTTP_400_BAD_REQUEST)
 
+    course = question.course  # 해당 질문을 참조하여 강좌 객체 가져오기!
 
-
-#     # 해당 강좌가 현재 로그인한 강사의 강좌가 아닐 때 -> 예외처리
-#     if course.instructor != user: 
-#         return Response({"error": "This course is not current User's"}, status=status.HTTP_400_BAD_REQUEST)
+    # 해당 강좌가 현재 로그인한 강사의 강좌가 아닐 때 -> 예외처리
+    if course.instructor != user: 
+        return Response({"error": "This course is not current Instructor's"}, status=status.HTTP_400_BAD_REQUEST)
     
-#     # 해당 질문 객체 뽑아 오기
-#     try:
-#         question = Question.objects.get(id=question_id)
-#     except ObjectDoesNotExist:
-#         return Response({"error": "There is no that question "}, status=status.HTTP_400_BAD_REQUEST)
-    
-#     comment = Comment(
-#         content = content,
-#         instructor = user,
-#         question = question
-#     )
-#     comment.save()
+    comment = Comment(
+        content = content,
+        instructor = user,
+        question = question
+    )
+    comment.save()
 
-#     # Serializer를 사용해 JSON 응답 생성
-
+    # Serializer를 사용해 JSON 응답 생성
+    serializer = AnswerQuestionSerializer(comment)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 
 
@@ -328,8 +330,7 @@ def ask_question(request):
 
 
 
-# 12. 로그인한 수강자가 자신이 구매한 강좌에 대한 강의들을 시청할 수 있도록 영상을 불러오는 API
-# -> course 모델에 한 강좌당 수강 가능 일자(ex. 90일)를 설정하고, 강좌 등록일 속성도 추가한 뒤
-# 이 api 실행할 때 바로 수강 가능 일수가 남아있는지 체킹하기!
+# 12. 로그인한 수강자가 자신이 구매한 강좌에 대한 강의들을 시청할 수 있도록 특정 강의 영상을 불러오는 API
+
 
 

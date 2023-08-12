@@ -152,3 +152,9 @@ class AskQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = '__all__'        
+
+
+class AnswerQuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = '__all__'
