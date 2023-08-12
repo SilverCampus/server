@@ -2,7 +2,7 @@ from campus.models import *
 from campus.serializers import (UserSerializer, SearchCoursesSerializer, 
                                 CourseVideoListSerializer, PurchasedCoursesSerializer, 
                                 EnrollSerializer, LikeSerializer, LikedCoursesSerializer,
-                                EnrollCourseSerializer, VideoUploadSerializer, AskQuestionSerializer)
+                                LaunchCourseSerializer, VideoUploadSerializer, AskQuestionSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -92,7 +92,7 @@ def purchased_courses(request):
 def course_like(request):
     course_id = request.data.get('course_id')   # request.POST에서 request.data로 수정!
     if not course_id:
-        return Response({"error": "Course ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "course_id is required"}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
         course = Course.objects.get(id=course_id)
@@ -128,7 +128,7 @@ def liked_courses(request):
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
-def enroll_course(request):
+def launch_course(request):
     user = request.user
     if not user.is_instructor: # User가 강사가 아니라면
         return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
@@ -137,7 +137,7 @@ def enroll_course(request):
     title = request.data.get('title')
     price = request.data.get('price')
     description = request.data.get('description')
-    category_name = request.data.get('category')  # 프론트엔드로부터 이름으로 받음. id x
+    category_name = request.data.get('category_name')  # 프론트엔드로부터 이름으로 받음. id x
     # thumbnail = request.data.get('thumbnail')   
     thumbnail = request.FILES.get('thumbnail') # 나중에 S3에 저장하는 로직대로 처리해야!!
     is_live = request.data.get('is_live')
@@ -179,7 +179,7 @@ def enroll_course(request):
     course.save()
 
     # Serializer를 사용해 JSON 응답 생성
-    serializer = EnrollCourseSerializer(course)
+    serializer = LaunchCourseSerializer(course)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -196,12 +196,12 @@ def video_upload(request):
     title = request.data.get('title')
     video_file = request.FILES.get('video_file')  # 여길 나중에 FILES로 바꿔야!!
     # video_file = request.data.get('video_file')
-    course_id = request.data.get('course')
+    course_id = request.data.get('course_id')
 
     try: # 해당 강좌 뽑아 오기
         course = Course.objects.get(id=course_id)
     except ObjectDoesNotExist:
-        return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "There is no Course"}, status=status.HTTP_400_BAD_REQUEST)
 
     if course.instructor != user:
         return Response({"error": "Unmatched btw instructor and course"}, status=status.HTTP_400_BAD_REQUEST)
@@ -250,7 +250,7 @@ def ask_question(request):
     # 프론트엔드로부터 넘겨받는 정보: title, content, course(id)
     title = request.data.get('title')
     content = request.data.get('content')
-    course_id = request.data.get('course')
+    course_id = request.data.get('course_id')
 
     try: # 해당 강좌 뽑아 오기
         course = Course.objects.get(id=course_id)
@@ -261,7 +261,7 @@ def ask_question(request):
     try: # 해당 학생이 넘겨받은 수업 듣고 있는지 체크 -> 아니면 예외처리
         enroll_check = Enroll.objects.get(course=course, user=user)
     except Enroll.DoesNotExist:
-        return Response({"error": "User is not enrolled in this course"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "User did not enroll this course"}, status=status.HTTP_400_BAD_REQUEST)
 
 
     question = Question(
@@ -288,5 +288,9 @@ def ask_question(request):
 
 
 
+
+# 12. 로그인한 수강자가 자신이 구매한 강좌에 대한 강의들을 시청할 수 있도록 영상을 불러오는 API
+# -> course 모델에 한 강좌당 수강 가능 일자(ex. 90일)를 설정하고, 강좌 등록일 속성도 추가한 뒤
+# 이 api 실행할 때 바로 수강 가능 일수가 남아있는지 체킹하기!
 
 

@@ -116,7 +116,7 @@ class LikedCoursesSerializer(serializers.ModelSerializer):
         model = Course
         fields = '__all__'    
 
-class EnrollCourseSerializer(serializers.ModelSerializer):
+class LaunchCourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = '__all__'               
