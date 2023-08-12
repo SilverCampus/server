@@ -79,7 +79,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 
-#######  api 앱에서 쓰는 view 만들 때 쓰는 별도 시리얼라이즈들 ########
+#######  api 앱 내에서 view 만들 때 쓰는 별도 시리얼라이즈들 ########
 
 # class UserRegisterSerializer(serializers.ModelSerializer):
 #     class Meta:

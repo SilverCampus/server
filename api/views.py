@@ -53,7 +53,7 @@ class CourseVideoListView(ListAPIView):
 def course_enroll(request):
     course_id = request.data.get('course_id')  # request.data가 request.POST보다 일반적
     if not course_id:
-        return Response({"error": "Course ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({"error": "course_id is required"}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
         course = Course.objects.get(id=course_id)
@@ -277,11 +277,16 @@ def ask_question(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-
-
 # 10. 선생님이 자신이 개설한 강좌에 대한 question에 comment를 다는 API
 
 
 
 
 # 11. 로그인한 선생님이 자신의 강좌의 description을 수정하는 API
+
+
+
+
+
+
+

@@ -2,7 +2,7 @@ from django.urls import path, include
 from .views import *
 
 urlpatterns = [
-    path('search-courses/', search_courses, name='search-courses'),            # 1번
+    path('search-courses/', search_courses, name='search-courses'),            # 1번, 문서작업 Ok
     path('course/<int:course_id>/video/', CourseVideoListView.as_view(), name="CourseVideoList"),  # 2번
     path('course-enroll/', course_enroll, name='course-enroll'),               # 3번
     path('purchased-courses/', purchased_courses, name='purchased-courses'),   # 4번
