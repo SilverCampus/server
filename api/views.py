@@ -52,6 +52,7 @@ class CourseVideoListView(ListAPIView):
 @permission_classes([permissions.IsAuthenticated])
 def course_enroll(request):
     course_id = request.data.get('course_id')  # request.data가 request.POST보다 일반적
+
     if not course_id:
         return Response({"error": "course_id is required"}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -183,10 +184,10 @@ def launch_course(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# 8. 선생님이 자신이 개설한 강좌에 새로운 영상 파일을 추가하는 API (S3 부분 처리해야!!)
+# 8. 선생님이 자신이 개설한 강좌에 새로운 영상 파일을 추가하는 API 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
-def video_upload(request):
+def video_upload(request):  
     user = request.user
 
     if not user.is_instructor: # User가 강사가 아니라면
@@ -206,6 +207,9 @@ def video_upload(request):
     if course.instructor != user:
         return Response({"error": "Unmatched btw instructor and course"}, status=status.HTTP_400_BAD_REQUEST)
 
+    # order_in_course 값 확보하기 (추가 함!)
+    order_in_course = course.video_count() + 1
+
     # S3 연결
     s3_client = boto3.client(
         's3',
@@ -219,17 +223,16 @@ def video_upload(request):
     # S3에 업로드
     s3_client.upload_fileobj(video_file, settings.AWS_STORAGE_BUCKET_NAME, file_path, ExtraArgs={'ContentType': 'video/mp4'})
 
-
     # S3 URL 생성
     video_url = f'{file_path}'
 
     video = Video(
         title=title,
         video_file=video_url,
-        course=course
+        course=course,
+        order_in_course = order_in_course
     )
     video.save()
-
 
     # Serializer를 사용해 JSON 응답 생성
     serializer = VideoUploadSerializer(video)
@@ -277,8 +280,41 @@ def ask_question(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# 10. 선생님이 자신이 개설한 강좌에 대한 question에 comment를 다는 API
+# # 10. 로그인한 선생님이 자신이 개설한 강좌에 대한 question에 comment를 다는 API
+# @api_view(['POST'])
+# @permission_classes((permissions.IsAuthenticated,))
+# def answer_question(request):   # 프론트로부터 넘겨받아야 할 정보: question_id, content(답글 내용)
+#     user = request.user
 
+#     if not user.is_instructor: # User가 강사가 아니라면 -> 예외처리
+#         return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
+    
+#     question_id = request.data.get('question_id')
+#     content = request.data.get('content')
+
+
+
+
+#     # 해당 강좌가 현재 로그인한 강사의 강좌가 아닐 때 -> 예외처리
+#     if course.instructor != user: 
+#         return Response({"error": "This course is not current User's"}, status=status.HTTP_400_BAD_REQUEST)
+    
+#     # 해당 질문 객체 뽑아 오기
+#     try:
+#         question = Question.objects.get(id=question_id)
+#     except ObjectDoesNotExist:
+#         return Response({"error": "There is no that question "}, status=status.HTTP_400_BAD_REQUEST)
+    
+#     comment = Comment(
+#         content = content,
+#         instructor = user,
+#         question = question
+#     )
+#     comment.save()
+
+#     # Serializer를 사용해 JSON 응답 생성
+
+    
 
 
 

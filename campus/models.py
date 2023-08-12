@@ -28,6 +28,9 @@ class Course(models.Model):
     thumbnail = models.FileField(upload_to='images/') 
     is_live = models.BooleanField(default=False)
 
+    def video_count(self):
+        return self.video.count() # related_name 'video'를 사용함. 따라서 역참조 할 때 video 이용!
+
     def __str__(self):
         return self.title
 
@@ -37,7 +40,8 @@ class Video(models.Model):
     title = models.CharField(max_length=500)
     video_file = models.FileField(upload_to='videos/')  # 실제 영상 파일을 저장할 필드 s3에!!!
     course = models.ForeignKey(Course, related_name='video', on_delete=models.CASCADE)
-    
+    order_in_course = models.IntegerField()  # 연결된 강좌 내에서 몇 번째 강의인지 알려주는 속성 
+
     def __str__(self):
         return self.title
 
