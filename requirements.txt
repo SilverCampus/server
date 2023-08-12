@@ -8,6 +8,8 @@ pytz==2023.3
 sqlparse==0.4.4 ; python_version >= '3.5'
 
 
-pipenv install python-dotenv
-pipenv install boto3 django-storages
-pipenv install corsheaders
+# S3 관련 필수 설치 패키지
+pip install python-dotenv
+pip install boto3 
+pip install django-storages
+pip install corsheaders
