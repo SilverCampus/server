@@ -48,9 +48,13 @@ class CategorySerializer(serializers.ModelSerializer):
 #         fields = '__all__'
 
 class CourseSerializer(serializers.ModelSerializer):
+    video_count = serializers.SerializerMethodField() # video_count 필드 추가
     class Meta:
         model = Course
-        fields = '__all__'
+        fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count'] # video_count 필드를 포함
+        
+    def get_video_count(self, obj):
+        return obj.video.count() # obj는 현재 Course 인스턴스입니다. video_count 메서드를 호출해 개수를 반환합니다.
 
 class VideoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -87,9 +91,13 @@ class QuestionSerializer(serializers.ModelSerializer):
 #         fields = '__all__'
 
 class SearchCoursesSerializer(serializers.ModelSerializer):
+    video_count = serializers.SerializerMethodField() # video_count 필드 추가
     class Meta:
         model = Course
-        fields = '__all__'
+        fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count'] # video_count 필드를 포함
+
+    def get_video_count(self, obj):
+        return obj.video.count() # obj는 현재 Course 인스턴스입니다. video_count 메서드를 호출해 개수를 반환합니다.
 
 class CourseVideoListSerializer(serializers.ModelSerializer):
     class Meta:
@@ -97,9 +105,13 @@ class CourseVideoListSerializer(serializers.ModelSerializer):
         fields = '__all__'  
 
 class PurchasedCoursesSerializer(serializers.ModelSerializer):
+    video_count = serializers.SerializerMethodField() # video_count 필드 추가
     class Meta:
         model = Course
-        fields = '__all__'       
+        fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count'] # video_count 필드를 포함
+
+    def get_video_count(self, obj):
+        return obj.video.count() # obj는 현재 Course 인스턴스입니다. video_count 메서드를 호출해 개수를 반환합니다.     
 
 class EnrollSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,14 +124,22 @@ class LikeSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class LikedCoursesSerializer(serializers.ModelSerializer):
+    video_count = serializers.SerializerMethodField() # video_count 필드 추가
     class Meta:
         model = Course
-        fields = '__all__'    
+        fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count'] # video_count 필드를 포함
+
+    def get_video_count(self, obj):
+        return obj.video.count() # obj는 현재 Course 인스턴스입니다. video_count 메서드를 호출해 개수를 반환합니다.
 
 class LaunchCourseSerializer(serializers.ModelSerializer):
+    video_count = serializers.SerializerMethodField() # video_count 필드 추가
     class Meta:
         model = Course
-        fields = '__all__'               
+        fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count'] # video_count 필드를 포함
+    
+    def get_video_count(self, obj):
+        return obj.video.count() # obj는 현재 Course 인스턴스입니다. video_count 메서드를 호출해 개수를 반환합니다.               
 
 
 class VideoUploadSerializer(serializers.ModelSerializer):

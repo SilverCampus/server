@@ -51,6 +51,10 @@ class CourseVideoListView(ListAPIView):
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def course_enroll(request):
+    user = request.user
+    if user.is_instructor: # User가 강사가 아니라면
+        return Response({"error": "User is Instructor"}, status=status.HTTP_400_BAD_REQUEST)
+
     course_id = request.data.get('course_id')  # request.data가 request.POST보다 일반적
 
     if not course_id:
@@ -60,8 +64,7 @@ def course_enroll(request):
         course = Course.objects.get(id=course_id)
     except Course.DoesNotExist:
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
-    # 사용자가 로그인한 상태이므로 request.user에서 사용자 정보를 가져옵니다.
-    user = request.user
+    
     # Enroll 객체를 생성합니다.
     enroll = Enroll(course=course, user=user)
     # DB에 저장합니다.
