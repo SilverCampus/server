@@ -12,5 +12,6 @@ urlpatterns = [
     path('video-upload/', video_upload, name='video-upload'),                  # 8번, api 문서 Ok
     path('ask-question/', ask_question, name='ask-question'),                  # 9번, api 문서 Ok
     path('answer-question/', answer_question, name='answer-question'),         # 10번,
-    path('update-course-description/', update_course_description, name='update-course-description'), 
+    path('update-course-description/', update_course_description, name='update-course-description'), # 11번,
+    path('get-course-videos/', get_course_videos, name='get-course-videos'),    # 12번,
 ]

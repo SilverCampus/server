@@ -3,7 +3,8 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 CourseVideoListSerializer, PurchasedCoursesSerializer, 
                                 EnrollSerializer, LikeSerializer, LikedCoursesSerializer,
                                 LaunchCourseSerializer, VideoUploadSerializer, AskQuestionSerializer,
-                                AnswerQuestionSerializer, CourseDescriptionUpdateSerializer)
+                                AnswerQuestionSerializer, CourseDescriptionUpdateSerializer,
+                                GetCourseVideoSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -366,5 +367,31 @@ def update_course_description(request): # 프론트로부터 넘겨 받아야 �
 
 
 # 12. 로그인한 수강자가 자신이 구매한 강좌에 대한 강의들을 시청할 수 있도록 특정 강의 영상을 불러오는 API
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,)) 
+def get_course_videos(request): # 프론트로부터 받아야할 것들: course_id, video_num
+    user = request.user
+    course_id = request.GET.get('course_id')
+    order_in_course = request.GET.get('order_in_course')
+
+    if user.is_instructor: # User가 강사라면
+        return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try: # 수강자가 해당 강의를 듣고 있는지 체크
+        enroll = Enroll.objects.get(user=user, course_id=course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "This Enroll not found."}, status=404)
+    
+    # 비디오 모델에서 
+    try: # 수강자가 해당 강의를 듣고 있는지 체크
+        video = Video.objects.get(course_id=course_id, order_in_course=order_in_course)
+    except ObjectDoesNotExist:
+        return Response({"error": "This video not found."}, status=404)
+    
+    serializer = GetCourseVideoSerializer(video)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
 
 
