@@ -3,7 +3,7 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 CourseVideoListSerializer, PurchasedCoursesSerializer, 
                                 EnrollSerializer, LikeSerializer, LikedCoursesSerializer,
                                 LaunchCourseSerializer, VideoUploadSerializer, AskQuestionSerializer,
-                                AnswerQuestionSerializer)
+                                AnswerQuestionSerializer, CourseDescriptionUpdateSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -320,14 +320,51 @@ def answer_question(request):   # 프론트로부터 넘겨 받아야 할 정보
 
 
 # 11. 로그인한 선생님이 자신의 강좌의 description을 수정하는 API
-# 프론트로 받아올 변수들: course_id, content
+@api_view(['PATCH'])
+@permission_classes((permissions.IsAuthenticated,)) # courde_id를 url로 받음
+def update_course_description(request): # 프론트로부터 넘겨 받아야 할 정보: content(description 내용)
+    user = request.user
+    course_id = request.data.get('course_id')
 
 
+    if not user.is_instructor: # User가 강사가 아니라면 -> 예외처리
+            return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # course_id에 대해 course 객체 받아오기
+    try:
+        course = Course.objects.get(id=course_id, instructor=user)
+    except Course.DoesNotExist: 
+        return Response({"error": "Course not found or you are not the instructor."}, status=404)
 
+    # 해당 강좌가 현재 로그인한 강사의 강좌가 아닐 때 -> 예외처리
+    if course.instructor != user: 
+        return Response({"error": "This course is not current Instructor's"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    description = request.data.get('description')  # 프론트엔드에서 전달한 description 값 추출
+    title = course.title
+    price = course.price
+    category = course.category
+    thumbnail = course.thumbnail
+    is_live = course.is_live
+    
+    if description is not None:
+        course = Course(
+            id = course_id,
+            description = description,
+            title = title,
+            price = price,
+            instructor = user,
+            category = category,
+            thumbnail = thumbnail,
+            is_live = is_live
+        ) # description 값 업데이트
 
+        course.save()
+
+    serializer = CourseDescriptionUpdateSerializer(course)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 12. 로그인한 수강자가 자신이 구매한 강좌에 대한 강의들을 시청할 수 있도록 특정 강의 영상을 불러오는 API
-
 
 

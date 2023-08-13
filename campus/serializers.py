@@ -158,3 +158,8 @@ class AnswerQuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = '__all__'
+
+class CourseDescriptionUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'
