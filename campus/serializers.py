@@ -42,11 +42,6 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = '__all__'
 
-# class InstructorSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Instructor
-#         fields = '__all__'
-
 class CourseSerializer(serializers.ModelSerializer):
     video_count = serializers.SerializerMethodField() # video_count 필드 추가
     class Meta:
@@ -182,9 +177,4 @@ class GetRecentlyWatchedCoursesSerializer(serializers.ModelSerializer):
         model = Course
         fields = '__all__'
 
-
-
-class LikedCoursesSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Course
-        fields = '__all__'        
+     
