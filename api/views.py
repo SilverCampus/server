@@ -4,7 +4,8 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 EnrollSerializer, LikeSerializer, LikedCoursesSerializer,
                                 LaunchCourseSerializer, VideoUploadSerializer, AskQuestionSerializer,
                                 AnswerQuestionSerializer, CourseDescriptionUpdateSerializer,
-                                GetCourseVideoSerializer)
+                                GetCourseVideoSerializer, LikedCoursesSerializer,
+                                GetRecentlyWatchedCoursesSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -330,7 +331,7 @@ def answer_question(request):   # 프론트로부터 넘겨 받아야 할 정보
     
 
 
-# 11. 로그인한 선생님이 자신의 강좌의 description을 수정하는 API
+# 11. 로그인한 선생님이 자신의 강좌의 description을 수정하는 API (정연이가 API 씀)
 @api_view(['PATCH'])
 @permission_classes((permissions.IsAuthenticated,)) # courde_id를 url로 받음
 def update_course_description(request): # 프론트로부터 넘겨 받아야 할 정보: content(description 내용)
@@ -377,6 +378,8 @@ def update_course_description(request): # 프론트로부터 넘겨 받아야 �
 
 
 # 12. 로그인한 수강자가 자신이 구매한 강좌에 대한 강의들을 시청할 수 있도록 특정 강의 영상을 불러오는 API
+# (내가 만들었는데 이거 정연이가 추가한 모델 참고해서 12번 수정 해야해)
+
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) 
 def get_course_videos(request): # 프론트로부터 받아야할 것들: course_id, video_num
@@ -402,7 +405,53 @@ def get_course_videos(request): # 프론트로부터 받아야할 것들: course
     return Response(serializer.data, status=status.HTTP_200_OK)
     
 
-# 13 번 
+
+# 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연이가 API 할거임)
+
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def get_recently_watched_courses(request):
+    user = request.user
+    recently_watched = RecentlyWatched.objects.filter(user=user).order_by('-watched_at')
+
+    if user.is_instructor: # User가 강사라면 에러
+        return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    # 가장 최근에 시청한 강좌 id를 first_course_id에 저장
+    if recently_watched:
+        first_course_id = recently_watched[0].course_id
+    else:
+        return Response({"message": "No recently watched courses found."}, status=404)
+    
+    # first_course_id에 해당하는 course를 response
+    try:
+        course = Course.objects.get(id=first_course_id)
+    except Course.DoesNotExist: 
+        return Response({"error": "Course not found."}, status=404)
+    
+    serializer = GetRecentlyWatchedCoursesSerializer(course, many=False) 
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+# # 14번 가장 최근에 찜한 강의 
+# @api_view(['GET'])
+# @permission_classes((permissions.IsAuthenticated,))
+# def get_recently_liked_courses(request):
+#     user = request.user
+
+#     if user.is_instructor:
+#         return Response({"error": "User is not a student"}, status=status.HTTP_400_BAD_REQUEST)
+
+#     # Like 모델을 기반으로 사용자의 최근 좋아요 강좌를 가져옵니다.
+#     recent_likes = Like.objects.filter(user=user).order_by('-liked_date')[:5]
+    
+#     # 강좌 목록만 추출
+#     liked_courses = [like.course for like in recent_likes]
+
+#     serializer = LikedCoursesSerializer(liked_courses, many=True)
+#     return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 
 

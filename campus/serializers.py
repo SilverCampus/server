@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from campus.models import Course, Category, Video, Like, Enroll, Comment, Question, User
+from campus.models import Course, Category, Video, Like, Enroll, Comment, Question, User, RecentlyWatched
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -80,6 +80,13 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = '__all__'
+
+
+class RecentlyWatchedSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecentlyWatched
+        fields = '__all__'       
+
 
 
 
@@ -168,3 +175,16 @@ class GetCourseVideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
         fields = '__all__'
+
+
+class GetRecentlyWatchedCoursesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'
+
+
+
+# class LikedCoursesSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = Course
+#         fields = '__all__'        

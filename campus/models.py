@@ -49,6 +49,7 @@ class Video(models.Model):
 class Like(models.Model):
     course = models.ForeignKey(Course, related_name='like', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='like', on_delete=models.CASCADE)
+    # liked_date = models.DateTimeField(auto_now_add=True) # 새로 추가
 
     def __str__(self):
         return f"{self.user}의 {self.course}에 대한 좋아요" 
@@ -83,3 +84,13 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.content
+    
+
+# 최근 시청 기록
+class RecentlyWatched(models.Model):
+    user = models.ForeignKey(User, related_name='recently_watched', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name='recently_watched', on_delete=models.CASCADE)
+    watched_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}이 <{self.course.title}>를 ({self.watched_at})에 시청"

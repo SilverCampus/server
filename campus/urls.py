@@ -14,6 +14,7 @@ router.register(r'like', LikeViewSet)
 router.register(r'enroll', EnrollViewSet)
 router.register(r'comment', CommentViewSet)
 router.register(r'question', QuestionViewSet)
+router.register(r'recentlywatched',RecentlyWatchedViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
