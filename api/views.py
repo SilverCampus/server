@@ -319,8 +319,8 @@ def answer_question(request):   # 프론트로부터 넘겨 받아야 할 정보
     
 
 
-
 # 11. 로그인한 선생님이 자신의 강좌의 description을 수정하는 API
+# 프론트로 받아올 변수들: course_id, content
 
 
 
