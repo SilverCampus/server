@@ -5,7 +5,7 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 LaunchCourseSerializer, VideoUploadSerializer, AskQuestionSerializer,
                                 AnswerQuestionSerializer, CourseDescriptionUpdateSerializer,
                                 GetCourseVideoSerializer, LikedCoursesSerializer,
-                                GetRecentlyWatchedCoursesSerializer)
+                                GetRecentlyWatchedCoursesSerializer, CourseSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -13,7 +13,7 @@ from django.contrib.auth import get_user_model, authenticate
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-
+from rest_framework.permissions import IsAuthenticated
 from django.core.exceptions import ObjectDoesNotExist
 
 import boto3
@@ -434,24 +434,20 @@ def get_recently_watched_courses(request):
 
 
 
-# # 14번 가장 최근에 찜한 강의 
-# @api_view(['GET'])
-# @permission_classes((permissions.IsAuthenticated,))
-# def get_recently_liked_courses(request):
-#     user = request.user
+# 14번 가장 최근에 찜한 강의 (규빈)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def RecentlyLikedCourseView(request):
+    # 사용자가 좋아요를 누른 강의 중 가장 최근 것을 가져옴
+    recent_liked = Like.objects.filter(user=request.user).order_by('-id').first()
 
-#     if user.is_instructor:
-#         return Response({"error": "User is not a student"}, status=status.HTTP_400_BAD_REQUEST)
+    # 만약 찜한 강의가 없으면 빈 응답을 반환
+    if not recent_liked:
+        return Response({"detail": "No recent liked course found."}, status=404)
 
-#     # Like 모델을 기반으로 사용자의 최근 좋아요 강좌를 가져옵니다.
-#     recent_likes = Like.objects.filter(user=user).order_by('-liked_date')[:5]
-    
-#     # 강좌 목록만 추출
-#     liked_courses = [like.course for like in recent_likes]
+    course = recent_liked.course
+    serializer = CourseSerializer(course)
 
-#     serializer = LikedCoursesSerializer(liked_courses, many=True)
-#     return Response(serializer.data, status=status.HTTP_200_OK)
-
-
+    return Response(serializer.data)
 
 
