@@ -18,23 +18,33 @@ from django.core.exceptions import ObjectDoesNotExist
 import boto3
 from django.conf import settings
 
-# 1. 검색어 입력하면 해당 검색어가 포함된 Course 모델의 인스턴스 반환하는 API
-# 추가적으로 카테코리에도 해당되는 거면 다 가져오기!!
+# 1번 
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def search_courses(request):
-    keyword = request.GET.get('keyword') # URL의 쿼리 매개변수에서 'keyword'를 가져옴
+    keyword = request.GET.get('keyword')
     if keyword is None:
         return Response({"message": "Keyword is required"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # Course 릴레이션에서 keyword를 포함한 강좌들 리스트로 가져오기!
-    courses = Course.objects.filter(title__icontains=keyword)
 
-    if not courses.exists(): # 검색 결과가 없을 때 반환할 메세지
+    courses = Course.objects.filter(title__icontains=keyword)
+    courses_list = list(courses)
+
+    try:
+        category = Category.objects.get(name=keyword)
+        related_courses = category.course.all()
+        courses_list.extend(related_courses)
+    except Category.DoesNotExist:
+        # 카테고리가 없을 경우에 대한 처리는 필요에 따라 작성
+        pass
+
+    # 중복 제거
+    courses_set = set(courses_list)
+
+    if not courses_set:
         return Response({"message": "검색 결과가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
     # 찾은 객체들을 시리얼라이즈
-    serializer = SearchCoursesSerializer(courses, many=True) # 이 부분 프론트엔드 파트가 요구하는 대로 나중에 수정 ㄱ
+    serializer = SearchCoursesSerializer(list(courses_set), many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -392,6 +402,7 @@ def get_course_videos(request): # 프론트로부터 받아야할 것들: course
     return Response(serializer.data, status=status.HTTP_200_OK)
     
 
+# 13 번 
 
 
 
