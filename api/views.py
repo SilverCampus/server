@@ -138,7 +138,7 @@ def launch_course(request):
     if not user.is_instructor: # User가 강사가 아니라면
         return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
 
-    # 선생님일 때 -> 강좌의 데이터 추출
+    # 전달받은 데이터 추출
     title = request.data.get('title')
     price = request.data.get('price')
     description = request.data.get('description')
@@ -167,10 +167,8 @@ def launch_course(request):
     # S3에 업로드
     s3_client.upload_fileobj(thumbnail, settings.AWS_STORAGE_BUCKET_NAME, file_path, ExtraArgs={'ContentType': 'image/jpeg'})
 
-
     # S3 URL 생성
     thumbnail_url = f'{file_path}'
-
 
     course = Course(
         title=title,
@@ -243,8 +241,7 @@ def video_upload(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 
-
-# 9. 로그인한 학생이 자신이 수강 중은 강좌에 대해 question 등록하는 API
+# 9. 로그인한 학생이 자신이 수강 중인 강좌에 대해 question 등록하는 API
 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
