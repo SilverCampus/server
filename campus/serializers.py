@@ -184,7 +184,7 @@ class GetRecentlyWatchedCoursesSerializer(serializers.ModelSerializer):
 
 
 
-# class LikedCoursesSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Course
-#         fields = '__all__'        
+class LikedCoursesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Course
+        fields = '__all__'        
