@@ -18,4 +18,5 @@ urlpatterns = [
     path('recently-liked-course/', recently_liked_course, name='recently-liked-course'),     # 14번,
     path('video-completion/', video_completion, name='video-completion'),         # 15번,
     path('basic-cource-info/', basic_cource_info, name='basic-cource-info'),      # 16번,
-]
+    path('get-course-list-completion-rate/', get_course_list_completion_rate, name='get-course-list-completion-rate'), # 17번,
+] 

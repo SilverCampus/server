@@ -257,7 +257,6 @@ def video_upload(request):
     
 
 # 9. 로그인한 학생이 자신이 수강 중인 강좌에 대해 question 등록하는 API
-
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def ask_question(request):
@@ -276,12 +275,10 @@ def ask_question(request):
     except ObjectDoesNotExist:
         return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
     
-
     try: # 해당 학생이 넘겨받은 수업 듣고 있는지 체크 -> 아니면 예외처리
         enroll_check = Enroll.objects.get(course=course, user=user)
     except Enroll.DoesNotExist:
         return Response({"error": "User did not enroll this course"}, status=status.HTTP_400_BAD_REQUEST)
-
 
     question = Question(
         title = title,
@@ -297,7 +294,6 @@ def ask_question(request):
 
 
 # 10. 로그인한 선생님이 자신이 개설한 강좌에 대한 question에 comment를 달아주는 API
-
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def answer_question(request):   # 프론트로부터 넘겨 받아야 할 정보: question_id, content(답글 내용)
@@ -341,7 +337,6 @@ def update_course_description(request): # 프론트로부터 넘겨 받아야 �
     user = request.user
     course_id = request.data.get('course_id')
 
-
     if not user.is_instructor: # User가 강사가 아니라면 -> 예외처리
             return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -381,7 +376,6 @@ def update_course_description(request): # 프론트로부터 넘겨 받아야 �
 
 
 # 12. 로그인한 수강자가 자신이 구매한 강좌에 대한 강의들을 시청할 수 있도록 특정 강의 영상을 불러오는 API
-
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) 
 def get_course_videos(request): # 프론트로부터 받아야할 것들: course_id, order_in_course
@@ -422,7 +416,6 @@ def get_course_videos(request): # 프론트로부터 받아야할 것들: course
     
     serializer = GetCourseVideoSerializer(video)
     return Response(serializer.data, status=status.HTTP_200_OK)
-    
 
 
 # 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연)
@@ -454,7 +447,7 @@ def get_recently_watched_courses(request):
 
 # 14. 로그인한 수강자의 가장 최근에 찜한 강의를 반환해주는 API (규빈)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
+@permission_classes((permissions.IsAuthenticated,)) 
 def recently_liked_course(request):
     # 사용자가 좋아요를 누른 강의 중 가장 최근 것을 가져옴
     recent_liked = Like.objects.filter(user=request.user).order_by('-id').first()
@@ -509,7 +502,7 @@ def video_completion(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# 16 로그인 여부와 상관없이 특정 한 강좌의 대한 기본 정보를 반환하는 API(GET)
+# 16 구매 여부와 상관없이 특정 한 강좌의 대한 기본 정보를 반환하는 API(GET)
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def basic_cource_info(request): # 쿼리 파라미터로 받아야 할 정보: course_id
@@ -524,15 +517,47 @@ def basic_cource_info(request): # 쿼리 파라미터로 받아야 할 정보: c
     serializer = CourseSerializer(course)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-    
-# 17. 로그인한 수강자의 특정 강좌에 수강률을 반환하는 API (GET)
+
+# 17. 특정 강좌를 구매한 로그인한 수강자가 보는 강의 리스트와 수강률 반환하는 API (GET)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def get_course_completion_rate(request): # 쿼리 파라미터로 받아야 할 정보: course_id
+@permission_classes((permissions.IsAuthenticated,)) 
+def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야 할 정보: course_id
     user = request.user
     course_id = request.GET.get('course_id')
 
+    try: # 해당 강좌가 있는지 체크
+        course = Course.objects.get(id = course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
     
+    try: # 해당 user가 이 강의를 수강하고 있는지 체크
+        enroll = Enroll.objects.get(course_id = course_id, user = user)
+    except ObjectDoesNotExist:
+        return Response({"error": "The User does not enroll the Course"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    video_list = course.video.all() # 역참조로 course와 연결된 비디오들 다 가져오기
+    
+    # 수강률을 계산하기 위해 completion_rate 메서드를 사용
+    completion_rate = course.completion_rate(user)
+
+    # 각 비디오가 수강 완료되었는지 여부 넣어서 확인
+    video_completion_data = []
+    for video in video_list:
+        video_data = {
+            "id": video.id,
+            "title": video.title,
+            "order_in_course": video.order_in_course,
+            "completed": VideoCompletion.objects.filter(user=user, video=video).exists()
+        }
+        video_completion_data.append(video_data)
+
+    # 수강률과 비디오 수강 완료 정보를 반환
+    response_data = {
+        "completion_rate": completion_rate,  # 수강률
+        "videos": video_completion_data      # 각 비디오 별 수강 확인
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 
