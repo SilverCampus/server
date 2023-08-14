@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'campus',
     'api',
     'corsheaders',
+    'social',
 ]
 
 REST_FRAMEWORK = {
