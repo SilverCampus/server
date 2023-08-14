@@ -101,7 +101,6 @@ def purchased_courses(request):
     courses = [enroll.course for enroll in enrolls]
     serializer = PurchasedCoursesSerializer(courses, many=True, context={'request': request}) # request를 context로 전달해줘야 함!
                                                                     # Serializer에서 self.context['request']를 사용하고 있기 때문에
-
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -130,7 +129,6 @@ def course_like(request):
 
 
 # 6. 로그인한 사용자가 찜한 강좌 목록들 반환하는 API
-
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) # 로그인한 사용자만 접근 가능
 def liked_courses(request):
@@ -419,7 +417,6 @@ def get_course_videos(request): # 프론트로부터 받아야할 것들: course
 
 
 # 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연)
-
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
 def get_recently_watched_courses(request):
@@ -560,9 +557,16 @@ def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야
     return Response(response_data, status=status.HTTP_200_OK)
 
 
-
 # 18. 로그인한 수강자의 지금까지 총 이수 학점이 얼마인지 계산하여 반환하는 API(마이페이지에 쓸 것, GET)
 
+
+
+
+
+
+
+# 19. 로그인한 사용자(수강자)가 자신의 마이페이지에 들어갈 때, 로그인할 때, enroll된 강좌들 중 수강률이 100%가 된 애들의
+# 크레딧이 User에 각각 올라가도록 하는 것
 
 
 

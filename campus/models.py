@@ -51,6 +51,7 @@ class Video(models.Model):
     def __str__(self):
         return self.title
 
+
 # 좋아요 릴레이션
 class Like(models.Model):
     course = models.ForeignKey(Course, related_name='like', on_delete=models.CASCADE)
@@ -59,6 +60,7 @@ class Like(models.Model):
 
     def __str__(self):
         return f"{self.user}의 {self.course}에 대한 좋아요" 
+
 
 # 등록 릴레이션
 class Enroll(models.Model):
@@ -77,10 +79,9 @@ class Question(models.Model):
     student = models.ForeignKey(User, related_name='question', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='question', on_delete=models.CASCADE)
 
-
     def __str__(self):
         return self.title
-    
+
 
 # 답변 릴레이션
 class Comment(models.Model):
@@ -90,7 +91,7 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.content
-    
+
 
 # 최근 시청 강좌 저장 릴레이션
 class RecentlyWatched(models.Model):
@@ -100,7 +101,7 @@ class RecentlyWatched(models.Model):
 
     def __str__(self):
         return f"{self.user.username}이(가) <{self.course.title}>를 ({self.watched_at})에 시청"
-    
+
 
 # 강의 수강 완료 저장 릴레이션    
 class VideoCompletion(models.Model):
