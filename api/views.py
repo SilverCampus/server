@@ -19,11 +19,14 @@ from django.core.exceptions import ObjectDoesNotExist
 import boto3
 from django.conf import settings
 
-# 1번 
+from django.utils import timezone
+
+
+# 1. 특정 검색어를 입력하거나, 특정 카테고리의 이름을 쿼리 파라미터로 전달하면 관련된 강좌들 클라이언트에게 보내주는 API
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def search_courses(request):
-    keyword = request.GET.get('keyword')
+    keyword = request.GET.get('keyword') # 쿼리 파라미터로 전달받아야 함!
     if keyword is None:
         return Response({"message": "Keyword is required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -97,7 +100,8 @@ def purchased_courses(request):
     enrolls = Enroll.objects.filter(user=user)
 
     courses = [enroll.course for enroll in enrolls]
-    serializer = PurchasedCoursesSerializer(courses, many=True)
+    serializer = PurchasedCoursesSerializer(courses, many=True, context={'request': request}) # request를 context로 전달해줘야 함!
+                                                                    # Serializer에서 self.context['request']를 사용하고 있기 때문에
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -158,6 +162,7 @@ def launch_course(request):
     # thumbnail = request.data.get('thumbnail')   
     thumbnail = request.FILES.get('thumbnail') # 나중에 S3에 저장하는 로직대로 처리해야!!
     is_live = request.data.get('is_live')
+    credits = request.data.get('credits') # 몇 학점짜리 수업인지 
     
     # 카테고리 객체 찾기 (예외 처리를 위해 get_object_or_404를 사용할 수도 있음)
     try:
@@ -189,7 +194,8 @@ def launch_course(request):
         instructor=user,  # 강좌의 강사는 현재 로그인해 있는 User
         category=category,
         thumbnail=thumbnail_url,
-        is_live=is_live
+        is_live=is_live,
+        credits=credits
     )
     course.save()
 
@@ -382,24 +388,42 @@ def update_course_description(request): # 프론트로부터 넘겨 받아야 �
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) 
-def get_course_videos(request): # 프론트로부터 받아야할 것들: course_id, video_num
+def get_course_videos(request): # 프론트로부터 받아야할 것들: course_id, order_in_course
     user = request.user
     course_id = request.GET.get('course_id')
     order_in_course = request.GET.get('order_in_course')
 
-    if user.is_instructor: # User가 강사라면
+    if user.is_instructor: # User가 강사라면 -> 예외처리
         return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
 
-    try: # 수강자가 해당 강의를 듣고 있는지 체크
+    try: # 수강자가 해당 강좌를 듣고 있는지 체크 -> 예외처리
         enroll = Enroll.objects.get(user=user, course_id=course_id)
     except ObjectDoesNotExist:
         return Response({"error": "This Enroll not found."}, status=404)
     
     # 비디오 모델에서 
-    try: # 수강자가 해당 강의를 듣고 있는지 체크
+    try: # 현재 그 강좌에 해당 번째 강의 비디오가 있는지 여부 체크 -> 예외처리
         video = Video.objects.get(course_id=course_id, order_in_course=order_in_course)
     except ObjectDoesNotExist:
         return Response({"error": "This video not found."}, status=404)
+    
+    # 현재 수강하려고 하는 비디오의 강좌 정보를 불러오기
+    try:
+        course = Course.objects.get(id = course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "There is no Course"}, status=404)    
+    
+    # 해당 유저와 강좌에 대한 기존 기록이 있는지 확인
+    recentlyWatched, created = RecentlyWatched.objects.get_or_create(  # recentlyWatched: 검색되거나, 새로 생성된 객체 가르키는 변수
+        user=user,                                                     # created: 객체가 새로 생성되었으면 True, 기존에 존재했으면 False
+        course=course
+    )
+
+    # 기존 기록이 있으면 시간만 현재 시간으로 업데이트!
+    if not created: 
+        recentlyWatched.watched_at = timezone.now()
+        recentlyWatched.save()
+    
     
     serializer = GetCourseVideoSerializer(video)
     return Response(serializer.data, status=status.HTTP_200_OK)

@@ -27,9 +27,15 @@ class Course(models.Model):
     category = models.ForeignKey(Category, related_name='course' , on_delete=models.CASCADE)
     thumbnail = models.FileField(upload_to='images/') 
     is_live = models.BooleanField(default=False)
+    credits = models.PositiveIntegerField() # 1학점, 2학점, 3학점 등을 나타내는 정수 값
 
-    def video_count(self):  # 해당 강좌에 연결된 Video들이 몇 개인지 계산해서 반환해주는 함수
+    def video_count(self):  # 해당 강좌에 연결된 Video들이 몇 개인지 계산해서 반환해주는 메서드
         return self.video.count() # related_name 'video'를 사용함. 따라서 역참조 할 때 video 이용!
+    
+    def completion_rate(self, user): # 해당 강좌에 대한 수강자의 수강률을 계산해서 반환해주는 메서드
+        total_videos = self.video.count()
+        completed_videos = VideoCompletion.objects.filter(user=user, video__course=self).count()
+        return (completed_videos / total_videos) * 100 if total_videos > 0 else 0
 
     def __str__(self):
         return self.title
@@ -94,6 +100,7 @@ class RecentlyWatched(models.Model):
 
     def __str__(self):
         return f"{self.user.username}이 <{self.course.title}>를 ({self.watched_at})에 시청"
+    
     
 # 강의 수강 완료 저장 릴레이션    
 class VideoCompletion(models.Model):
