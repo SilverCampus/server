@@ -18,8 +18,8 @@ router.register(r'recentlywatched',RecentlyWatchedViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
-    path('register/', UserRegisterView.as_view(), name='user-register'),
-    path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('register/', UserRegisterView.as_view(), name='user-register'),            # Api 문서 Ok
+    path('login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),  # Api 문서 Ok
+    path('login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),       # Api 문서 Ok
 ]
 
