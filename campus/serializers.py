@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from campus.models import Course, Category, Video, Like, Enroll, Comment, Question, User, RecentlyWatched
+from campus.models import Course, Category, Video, Like, Enroll, Comment, Question, User, RecentlyWatched, BoardComment, BoardPostLike, BoardPost
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
@@ -177,4 +177,20 @@ class GetRecentlyWatchedCoursesSerializer(serializers.ModelSerializer):
         model = Course
         fields = '__all__'
 
-     
+# 게시글 작성
+class BoardPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BoardPost
+        fields = '__all__'
+
+# 게시글 댓글
+class BoardCommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BoardComment
+        fields = '__all__'
+
+# 게시글 좋아요
+class BoardPostLikeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BoardPostLike
+        fields = '__all__'

@@ -58,3 +58,18 @@ class QuestionViewSet(ModelViewSet):
 class RecentlyWatchedViewSet(ModelViewSet):
     queryset = RecentlyWatched.objects.all()
     serializer_class = RecentlyWatchedSerializer
+
+#게시글 작성
+class BoardPostViewSet(ModelViewSet):
+    queryset = BoardPost.objects.all()
+    serializer_class = BoardPostSerializer
+
+#게시글 댓글
+class BoardPostCommentViewSet(ModelViewSet):
+    queryset = BoardComment.objects.all()
+    serializer_class = BoardCommentSerializer
+
+#게시글 좋아요
+class BoardPostLikeViewSet(ModelViewSet):
+    queryset = BoardPostLike.objects.all()
+    serializer_class = BoardPostLikeSerializer

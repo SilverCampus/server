@@ -94,3 +94,41 @@ class RecentlyWatched(models.Model):
 
     def __str__(self):
         return f"{self.user.username}이 <{self.course.title}>를 ({self.watched_at})에 시청"
+    
+
+# 게시판 글 작성
+class BoardPost(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    image = models.ImageField(upload_to='board_posts/images/', null=True, blank=True)  # S3로 연결
+    video = models.FileField(upload_to='board_posts/videos/', null=True, blank=True)  # S3로 연결
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.title
+    
+
+# 게시판 댓글 추가
+class BoardComment(models.Model):
+    post = models.ForeignKey(BoardPost, related_name='board_comments', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return self.content[:20] + "..."
+
+
+# 게시판 좋아요 추가
+class BoardPostLike(models.Model):
+    post = models.ForeignKey(BoardPost, related_name='likes', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    liked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['post', 'user'] # 하나의 게시물에 한 사용자가 한 번만 좋아요
+
+    def __str__(self):
+        return f"{self.user.username}의 좋아요"
+
