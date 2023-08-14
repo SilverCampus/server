@@ -434,7 +434,7 @@ def get_recently_watched_courses(request):
 
 
 
-# 14번 가장 최근에 찜한 강의 (규빈)
+# 14. 로그인한 수강자의 가장 최근에 찜한 강의를 반환해주는 API (규빈)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def RecentlyLikedCourseView(request):
@@ -449,5 +449,8 @@ def RecentlyLikedCourseView(request):
     serializer = CourseSerializer(course)
 
     return Response(serializer.data)
+
+
+# 15 로그인한 수강자가 특정 강좌의 특정 강의에 대한 수강 완료 체크하는 API (POST)
 
 

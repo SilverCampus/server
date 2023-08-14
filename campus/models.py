@@ -28,7 +28,7 @@ class Course(models.Model):
     thumbnail = models.FileField(upload_to='images/') 
     is_live = models.BooleanField(default=False)
 
-    def video_count(self):
+    def video_count(self):  # 해당 강좌에 연결된 Video들이 몇 개인지 계산해서 반환해주는 함수
         return self.video.count() # related_name 'video'를 사용함. 따라서 역참조 할 때 video 이용!
 
     def __str__(self):
@@ -86,7 +86,7 @@ class Comment(models.Model):
         return self.content
     
 
-# 최근 시청 기록
+# 최근 시청 강좌 저장 릴레이션
 class RecentlyWatched(models.Model):
     user = models.ForeignKey(User, related_name='recently_watched', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='recently_watched', on_delete=models.CASCADE)
@@ -94,3 +94,9 @@ class RecentlyWatched(models.Model):
 
     def __str__(self):
         return f"{self.user.username}이 <{self.course.title}>를 ({self.watched_at})에 시청"
+    
+# 강의 수강 완료 저장 릴레이션    
+class VideoCompletion(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    completed_at = models.DateTimeField(auto_now=True)

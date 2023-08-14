@@ -15,5 +15,5 @@ urlpatterns = [
     path('update-course-description/', update_course_description, name='update-course-description'), # 11번,
     path('get-course-videos/', get_course_videos, name='get-course-videos'),    # 12번,
     path('get-recently-watched-courses/', get_recently_watched_courses, name='get-recently-watched-courses'), #13번, 
-    path('recently-liked-course/', RecentlyLikedCourseView, name='recently-liked-course'),
+    path('recently-liked-course/', RecentlyLikedCourseView, name='recently-liked-course'), # 14번,
 ]
