@@ -58,3 +58,4 @@ class QuestionViewSet(ModelViewSet):
 class RecentlyWatchedViewSet(ModelViewSet):
     queryset = RecentlyWatched.objects.all()
     serializer_class = RecentlyWatchedSerializer
+
