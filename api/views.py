@@ -499,7 +499,7 @@ def video_completion(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# 16 구매 여부와 상관없이 특정 한 강좌의 대한 기본 정보를 반환하는 API(GET)
+# 16 구매 여부와 상관없이 특정 한 강좌에 대한 기본 정보를 반환하는 API(GET)
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def basic_cource_info(request): # 쿼리 파라미터로 받아야 할 정보: course_id
@@ -515,7 +515,7 @@ def basic_cource_info(request): # 쿼리 파라미터로 받아야 할 정보: c
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# 17. 특정 강좌를 구매한 로그인한 수강자가 보는 강의 리스트와 수강률 반환하는 API (GET)
+# 17. 수강자가 구매한 강좌의 비디오 리스트 수강여부와 해당 강좌 수강률 반환하는 API (GET)
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) 
 def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야 할 정보: course_id
@@ -558,6 +558,8 @@ def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야
 
 
 # 18. 로그인한 수강자의 지금까지 총 이수 학점이 얼마인지 계산하여 반환하는 API(마이페이지에 쓸 것, GET)
+
+
 
 
 
