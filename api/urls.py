@@ -13,7 +13,8 @@ urlpatterns = [
     path('ask-question/', ask_question, name='ask-question'),                  # 9번, api 문서 Ok
     path('answer-question/', answer_question, name='answer-question'),         # 10번,
     path('update-course-description/', update_course_description, name='update-course-description'), # 11번,
-    path('get-course-videos/', get_course_videos, name='get-course-videos'),    # 12번,
+    path('get-course-videos/', get_course_videos, name='get-course-videos'),   # 12번,
     path('get-recently-watched-courses/', get_recently_watched_courses, name='get-recently-watched-courses'), #13번, 
-    path('recently-liked-course/', RecentlyLikedCourseView, name='recently-liked-course'), # 14번,
+    path('recently-liked-course/', recently_liked_course, name='recently-liked-course'), # 14번,
+    path('video-completion/', video_completion, name='video-completion'),      # 15번,
 ]

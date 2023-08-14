@@ -5,7 +5,8 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 LaunchCourseSerializer, VideoUploadSerializer, AskQuestionSerializer,
                                 AnswerQuestionSerializer, CourseDescriptionUpdateSerializer,
                                 GetCourseVideoSerializer, LikedCoursesSerializer,
-                                GetRecentlyWatchedCoursesSerializer, CourseSerializer)
+                                GetRecentlyWatchedCoursesSerializer, CourseSerializer,
+                                VideoCompletionSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -384,7 +385,6 @@ def update_course_description(request): # 프론트로부터 넘겨 받아야 �
 
 
 # 12. 로그인한 수강자가 자신이 구매한 강좌에 대한 강의들을 시청할 수 있도록 특정 강의 영상을 불러오는 API
-# (내가 만들었는데 이거 정연이가 추가한 모델 참고해서 12번 수정 해야해)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) 
@@ -424,13 +424,12 @@ def get_course_videos(request): # 프론트로부터 받아야할 것들: course
         recentlyWatched.watched_at = timezone.now()
         recentlyWatched.save()
     
-    
     serializer = GetCourseVideoSerializer(video)
     return Response(serializer.data, status=status.HTTP_200_OK)
     
 
 
-# 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연이가 API 할거임)
+# 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연이가 API 문서 작업 할거임)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -457,11 +456,10 @@ def get_recently_watched_courses(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
 # 14. 로그인한 수강자의 가장 최근에 찜한 강의를 반환해주는 API (규빈)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def RecentlyLikedCourseView(request):
+def recently_liked_course(request):
     # 사용자가 좋아요를 누른 강의 중 가장 최근 것을 가져옴
     recent_liked = Like.objects.filter(user=request.user).order_by('-id').first()
 
@@ -475,6 +473,54 @@ def RecentlyLikedCourseView(request):
     return Response(serializer.data)
 
 
-# 15 로그인한 수강자가 특정 강좌의 특정 강의에 대한 수강 완료 체크하는 API (POST)
+# 15. 로그인한 수강자가 특정 강좌의 특정 강의에 대한 수강 완료 체크하는 API (POST)
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,)) # 프론트로부터 받아야할 것들: course_id, order_in_course 
+def video_completion(request):
+    user = request.user
+    course_id = request.data.get('course_id')
+    order_in_course = request.data.get('order_in_course')
+
+    if user.is_instructor:  # User가 강사라면 -> 예외처리
+        return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:  # 해당 강좌 뽑아 오기
+        course = Course.objects.get(id=course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:  # 해당 학생이 넘겨받은 수업 듣고 있는지 체크 -> 아니면 예외처리
+        enroll_check = Enroll.objects.get(course=course, user=user)
+    except Enroll.DoesNotExist:
+        return Response({"error": "User did not enroll this course"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 해당 강좌에 order_in_course 가 있는지 체크 -> 아니면 예외처리
+    if int(course.video_count()) < int(order_in_course): # 에러!
+        return Response({"error": "This order_in_course is invalid!"}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        video = Video.objects.get(course_id=course_id, order_in_course=order_in_course) # 일치하는 비디오 객체 반환
+
+    videoCompletion, created = VideoCompletion.objects.get_or_create( # videoCompletion: 검색되거나, 새로 생성된 객체 가르키는 변수          
+        user = user,                                                  # created: 객체가 새로 생성되었으면 True, 기존에 존재했으면 False
+        video = video
+    )
+
+    if created: # 새로 생성이 된 것이면
+        videoCompletion.save()  # VideoCompletion 객체 생성 후 저장
+
+    # Serializer를 사용해 JSON 응답 생성
+    serializer = VideoCompletionSerializer(videoCompletion)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    
+
+
+
+# 16. 로그인한 수강자의 특정 강좌에 수강률을 반환하는 API (GET)
+
+
+# 17. 로그인한 수강자의 지금까지 총 이수 학점이 얼마인지 계산하여 반환하는 API(마이페이지에 쓸 것, GET)
+
+
 
 

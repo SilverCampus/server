@@ -188,3 +188,9 @@ class GetRecentlyWatchedCoursesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = '__all__'
+
+
+class VideoCompletionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = VideoCompletion
+        fields = '__all__'

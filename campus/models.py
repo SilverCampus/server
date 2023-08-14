@@ -99,11 +99,14 @@ class RecentlyWatched(models.Model):
     watched_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user.username}이 <{self.course.title}>를 ({self.watched_at})에 시청"
+        return f"{self.user.username}이(가) <{self.course.title}>를 ({self.watched_at})에 시청"
     
-    
+
 # 강의 수강 완료 저장 릴레이션    
 class VideoCompletion(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     video = models.ForeignKey(Video, on_delete=models.CASCADE)
     completed_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}이(가) <{self.video.title}> 강의를 수강 완료"
