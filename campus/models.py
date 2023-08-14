@@ -9,6 +9,31 @@ class User(AbstractUser):
     nickname = models.CharField(max_length=30, null=True, blank=True) # 사용자의 닉네임
     is_instructor = models.BooleanField(default=True)  # 슈퍼 유저 만들 때 자동으로 is_instructor True
     total_credits = models.IntegerField(default=0)  # 총 이수 학점 필드 추가, 초기값은 0
+
+    GRADES = [
+        ('undergraduate', '학부생'),
+        ('master', '석사'),
+        ('doctorate', '박사'),
+        ('assistant_professor', '조교수'),
+        ('associate_professor', '부교수'),
+        ('professor', '정교수'),
+    ]
+    grade = models.CharField(max_length=20, choices=GRADES, default='undergraduate')
+    
+    def update_grade(self):
+        if self.total_credits < 15:
+            self.grade = 'undergraduate'
+        elif self.total_credits < 30:
+            self.grade = 'master'
+        elif self.total_credits < 45:
+            self.grade = 'doctorate'
+        elif self.total_credits < 60:
+            self.grade = 'assistant_professor'
+        elif self.total_credits < 90:
+            self.grade = 'associate_professor'
+        else:
+            self.grade = 'professor'
+        self.save()
     
 
 # 카테고리

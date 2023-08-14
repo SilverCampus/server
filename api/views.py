@@ -501,12 +501,12 @@ def video_completion(request):
         videoCompletion.save()  # VideoCompletion 객체 생성 후 저장
 
         # 여기에서 User의 total_credits을 업데이트하고, 이 업데이트 결과에 따라서 등급을 결정하도록 수정하기!!
-        
         completion_rate = course.completion_rate(user)
         if completion_rate == 100:
             user.total_credits += course.credits    
             user.save()  # 그리고 저장!!
 
+            user.update_grade()
 
     # Serializer를 사용해 JSON 응답 생성
     serializer = VideoCompletionSerializer(videoCompletion)
@@ -569,7 +569,6 @@ def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야
     }
 
     return Response(response_data, status=status.HTTP_200_OK)
-
 
 
 # 18. 로그인한 사용자(수강자)가 자신의 마이페이지에 들어갈 때, 로그인할 때, enroll된 강좌들 중 수강률이 100%가 된 애들의
