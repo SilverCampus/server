@@ -63,7 +63,7 @@ class CourseVideoListView(ListAPIView):
         return Video.objects.filter(course__id = course_id)
 
 
-# 3. 로그인한 사용자가 특정 강좌를 구매하는 API
+# 3. 로그인한 사용자가 특정 강좌를 구매(등록)하는 API
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def course_enroll(request):
@@ -81,10 +81,16 @@ def course_enroll(request):
     except Course.DoesNotExist:
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
     
-    # Enroll 객체를 생성합니다.
-    enroll = Enroll(course=course, user=user)
-    # DB에 저장합니다.
-    enroll.save()
+    enroll, created = Enroll.objects.get_or_create( # created: 객체가 새로 생성되었으면 True, 기존에 존재했으면 False   
+        user = user,                                                          
+        course = course
+    )
+
+    if created: # 해당 객체가 지금 처음 생성된 것이라면
+        enroll.save()  # DB에 저장
+    else:
+        return Response({"error": "This enroll already exists"}, status=status.HTTP_400_BAD_REQUEST) # 중복 저장 막는 예외처리
+
     # 응답을 위한 Serializer를 사용합니다.
     serializer = EnrollSerializer(enroll)
 
