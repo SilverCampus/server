@@ -11,28 +11,28 @@ class User(AbstractUser):
     total_credits = models.IntegerField(default=0)  # 총 이수 학점 필드 추가, 초기값은 0
 
     GRADES = [
-        ('undergraduate', '학부생'),
-        ('master', '석사'),
-        ('doctorate', '박사'),
-        ('assistant_professor', '조교수'),
-        ('associate_professor', '부교수'),
-        ('professor', '정교수'),
+        ('Freshman', '새내기'),
+        ('Undergraduate', '학부생'),
+        ('Bachelor', '학사'),
+        ('Master', '석사'),
+        ('Doctorate', '박사'),
+        ('Professor', '교수'), 
     ]
     grade = models.CharField(max_length=20, choices=GRADES, default='undergraduate')
     
     def update_grade(self):
-        if self.total_credits < 15:
-            self.grade = 'undergraduate'
-        elif self.total_credits < 30:
-            self.grade = 'master'
-        elif self.total_credits < 45:
-            self.grade = 'doctorate'
+        if self.total_credits < 9:
+            self.grade = 'Freshman'
+        elif self.total_credits < 27:
+            self.grade = 'Undergraduate'
         elif self.total_credits < 60:
-            self.grade = 'assistant_professor'
-        elif self.total_credits < 90:
-            self.grade = 'associate_professor'
+            self.grade = 'Bachelor'
+        elif self.total_credits < 120:
+            self.grade = 'Master'
+        elif self.total_credits < 180:
+            self.grade = 'Doctorate'
         else:
-            self.grade = 'professor'
+            self.grade = 'Professor' # 180학점 이상 수강하시면 교수!
         self.save()
     
 
