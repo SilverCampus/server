@@ -27,9 +27,15 @@ class Course(models.Model):
     category = models.ForeignKey(Category, related_name='course' , on_delete=models.CASCADE)
     thumbnail = models.FileField(upload_to='images/') 
     is_live = models.BooleanField(default=False)
+    credits = models.PositiveIntegerField() # 1학점, 2학점, 3학점 등을 나타내는 정수 값
 
-    def video_count(self):
+    def video_count(self):  # 해당 강좌에 연결된 Video들이 몇 개인지 계산해서 반환해주는 메서드
         return self.video.count() # related_name 'video'를 사용함. 따라서 역참조 할 때 video 이용!
+    
+    def completion_rate(self, user): # 해당 강좌에 대한 수강자의 수강률을 계산해서 반환해주는 메서드
+        total_videos = self.video.count()
+        completed_videos = VideoCompletion.objects.filter(user=user, video__course=self).count()
+        return (completed_videos / total_videos) * 100 if total_videos > 0 else 0
 
     def __str__(self):
         return self.title
@@ -86,49 +92,21 @@ class Comment(models.Model):
         return self.content
     
 
-# 최근 시청 기록
+# 최근 시청 강좌 저장 릴레이션
 class RecentlyWatched(models.Model):
     user = models.ForeignKey(User, related_name='recently_watched', on_delete=models.CASCADE)
     course = models.ForeignKey(Course, related_name='recently_watched', on_delete=models.CASCADE)
     watched_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user.username}이 <{self.course.title}>를 ({self.watched_at})에 시청"
+        return f"{self.user.username}이(가) <{self.course.title}>를 ({self.watched_at})에 시청"
     
 
-# 게시판 글 작성
-class BoardPost(models.Model):
+# 강의 수강 완료 저장 릴레이션    
+class VideoCompletion(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
-    content = models.TextField()
-    image = models.ImageField(upload_to='board_posts/images/', null=True, blank=True)  # S3로 연결
-    video = models.FileField(upload_to='board_posts/videos/', null=True, blank=True)  # S3로 연결
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return self.title
-    
-
-# 게시판 댓글 추가
-class BoardComment(models.Model):
-    post = models.ForeignKey(BoardPost, related_name='board_comments', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    
-    def __str__(self):
-        return self.content[:20] + "..."
-
-
-# 게시판 좋아요 추가
-class BoardPostLike(models.Model):
-    post = models.ForeignKey(BoardPost, related_name='likes', on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    liked_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        unique_together = ['post', 'user'] # 하나의 게시물에 한 사용자가 한 번만 좋아요
+    video = models.ForeignKey(Video, on_delete=models.CASCADE)
+    completed_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user.username}의 좋아요"
-
+        return f"{self.user.username}이(가) <{self.video.title}> 강의를 수강 완료"

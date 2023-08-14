@@ -5,7 +5,8 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 LaunchCourseSerializer, VideoUploadSerializer, AskQuestionSerializer,
                                 AnswerQuestionSerializer, CourseDescriptionUpdateSerializer,
                                 GetCourseVideoSerializer, LikedCoursesSerializer,
-                                GetRecentlyWatchedCoursesSerializer, CourseSerializer)
+                                GetRecentlyWatchedCoursesSerializer, CourseSerializer,
+                                VideoCompletionSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -19,11 +20,14 @@ from django.core.exceptions import ObjectDoesNotExist
 import boto3
 from django.conf import settings
 
-# 1번 
+from django.utils import timezone
+
+
+# 1. 특정 검색어를 입력하거나, 특정 카테고리의 이름을 쿼리 파라미터로 전달하면 관련된 강좌들 클라이언트에게 보내주는 API
 @api_view(['GET'])
 @permission_classes((permissions.AllowAny,))
 def search_courses(request):
-    keyword = request.GET.get('keyword')
+    keyword = request.GET.get('keyword') # 쿼리 파라미터로 전달받아야 함!
     if keyword is None:
         return Response({"message": "Keyword is required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -60,7 +64,6 @@ class CourseVideoListView(ListAPIView):
 
 
 # 3. 로그인한 사용자가 특정 강좌를 구매하는 API
-
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def course_enroll(request):
@@ -89,7 +92,6 @@ def course_enroll(request):
 
 
 # 4. 로그인한 사용자가 구매한 강좌 목록들 반환하는 API
-
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) #로그인한 사용자만 접근 가능
 def purchased_courses(request):
@@ -97,13 +99,13 @@ def purchased_courses(request):
     enrolls = Enroll.objects.filter(user=user)
 
     courses = [enroll.course for enroll in enrolls]
-    serializer = PurchasedCoursesSerializer(courses, many=True)
+    serializer = PurchasedCoursesSerializer(courses, many=True, context={'request': request}) # request를 context로 전달해줘야 함!
+                                                                    # Serializer에서 self.context['request']를 사용하고 있기 때문에
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 # 5. 로그인한 사용자가 특정 강좌를 찜하는 API
-
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
 def course_like(request):
@@ -142,7 +144,6 @@ def liked_courses(request):
 
 
 # 7. 로그인한 사용자(강사)가 새로운 강좌를 개설하는 하는 API
-
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def launch_course(request):
@@ -158,6 +159,7 @@ def launch_course(request):
     # thumbnail = request.data.get('thumbnail')   
     thumbnail = request.FILES.get('thumbnail') # 나중에 S3에 저장하는 로직대로 처리해야!!
     is_live = request.data.get('is_live')
+    credits = request.data.get('credits') # 몇 학점짜리 수업인지 
     
     # 카테고리 객체 찾기 (예외 처리를 위해 get_object_or_404를 사용할 수도 있음)
     try:
@@ -189,7 +191,8 @@ def launch_course(request):
         instructor=user,  # 강좌의 강사는 현재 로그인해 있는 User
         category=category,
         thumbnail=thumbnail_url,
-        is_live=is_live
+        is_live=is_live,
+        credits=credits
     )
     course.save()
 
@@ -254,7 +257,6 @@ def video_upload(request):
     
 
 # 9. 로그인한 학생이 자신이 수강 중인 강좌에 대해 question 등록하는 API
-
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def ask_question(request):
@@ -273,12 +275,10 @@ def ask_question(request):
     except ObjectDoesNotExist:
         return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
     
-
     try: # 해당 학생이 넘겨받은 수업 듣고 있는지 체크 -> 아니면 예외처리
         enroll_check = Enroll.objects.get(course=course, user=user)
     except Enroll.DoesNotExist:
         return Response({"error": "User did not enroll this course"}, status=status.HTTP_400_BAD_REQUEST)
-
 
     question = Question(
         title = title,
@@ -294,7 +294,6 @@ def ask_question(request):
 
 
 # 10. 로그인한 선생님이 자신이 개설한 강좌에 대한 question에 comment를 달아주는 API
-
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def answer_question(request):   # 프론트로부터 넘겨 받아야 할 정보: question_id, content(답글 내용)
@@ -331,13 +330,12 @@ def answer_question(request):   # 프론트로부터 넘겨 받아야 할 정보
     
 
 
-# 11. 로그인한 선생님이 자신의 강좌의 description을 수정하는 API (정연이가 API 씀)
+# 11. 로그인한 선생님이 자신의 강좌의 description을 수정하는 API (정연)
 @api_view(['PATCH'])
 @permission_classes((permissions.IsAuthenticated,)) # courde_id를 url로 받음
 def update_course_description(request): # 프론트로부터 넘겨 받아야 할 정보: content(description 내용)
     user = request.user
     course_id = request.data.get('course_id')
-
 
     if not user.is_instructor: # User가 강사가 아니라면 -> 예외처리
             return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
@@ -378,35 +376,49 @@ def update_course_description(request): # 프론트로부터 넘겨 받아야 �
 
 
 # 12. 로그인한 수강자가 자신이 구매한 강좌에 대한 강의들을 시청할 수 있도록 특정 강의 영상을 불러오는 API
-# (내가 만들었는데 이거 정연이가 추가한 모델 참고해서 12번 수정 해야해)
-
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) 
-def get_course_videos(request): # 프론트로부터 받아야할 것들: course_id, video_num
+def get_course_videos(request): # 프론트로부터 받아야할 것들: course_id, order_in_course
     user = request.user
     course_id = request.GET.get('course_id')
     order_in_course = request.GET.get('order_in_course')
 
-    if user.is_instructor: # User가 강사라면
+    if user.is_instructor: # User가 강사라면 -> 예외처리
         return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
 
-    try: # 수강자가 해당 강의를 듣고 있는지 체크
+    try: # 수강자가 해당 강좌를 듣고 있는지 체크 -> 예외처리
         enroll = Enroll.objects.get(user=user, course_id=course_id)
     except ObjectDoesNotExist:
         return Response({"error": "This Enroll not found."}, status=404)
     
     # 비디오 모델에서 
-    try: # 수강자가 해당 강의를 듣고 있는지 체크
+    try: # 현재 그 강좌에 해당 번째 강의 비디오가 있는지 여부 체크 -> 예외처리
         video = Video.objects.get(course_id=course_id, order_in_course=order_in_course)
     except ObjectDoesNotExist:
         return Response({"error": "This video not found."}, status=404)
     
+    # 현재 수강하려고 하는 비디오의 강좌 정보를 불러오기
+    try:
+        course = Course.objects.get(id = course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "There is no Course"}, status=404)    
+    
+    # 해당 유저와 강좌에 대한 기존 기록이 있는지 확인
+    recentlyWatched, created = RecentlyWatched.objects.get_or_create(  # recentlyWatched: 검색되거나, 새로 생성된 객체 가르키는 변수
+        user=user,                                                     # created: 객체가 새로 생성되었으면 True, 기존에 존재했으면 False
+        course=course
+    )
+
+    # 기존 기록이 있으면 시간만 현재 시간으로 업데이트!
+    if not created: 
+        recentlyWatched.watched_at = timezone.now()
+        recentlyWatched.save()
+    
     serializer = GetCourseVideoSerializer(video)
     return Response(serializer.data, status=status.HTTP_200_OK)
-    
 
 
-# 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연이가 API 할거임)
+# 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연)
 
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
@@ -433,11 +445,10 @@ def get_recently_watched_courses(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-
-# 14번 가장 최근에 찜한 강의 (규빈)
+# 14. 로그인한 수강자의 가장 최근에 찜한 강의를 반환해주는 API (규빈)
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def RecentlyLikedCourseView(request):
+@permission_classes((permissions.IsAuthenticated,)) 
+def recently_liked_course(request):
     # 사용자가 좋아요를 누른 강의 중 가장 최근 것을 가져옴
     recent_liked = Like.objects.filter(user=request.user).order_by('-id').first()
 
@@ -449,5 +460,109 @@ def RecentlyLikedCourseView(request):
     serializer = CourseSerializer(course)
 
     return Response(serializer.data)
+
+
+# 15. 로그인한 수강자가 특정 강좌의 특정 강의에 대한 수강 완료 체크하는 API (POST)
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,)) # 프론트로부터 받아야할 것들: course_id, order_in_course 
+def video_completion(request):
+    user = request.user
+    course_id = request.data.get('course_id')
+    order_in_course = request.data.get('order_in_course')
+
+    if user.is_instructor:  # User가 강사라면 -> 예외처리
+        return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:  # 해당 강좌 뽑아 오기
+        course = Course.objects.get(id=course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:  # 해당 학생이 넘겨받은 수업 듣고 있는지 체크 -> 아니면 예외처리
+        enroll_check = Enroll.objects.get(course=course, user=user)
+    except Enroll.DoesNotExist:
+        return Response({"error": "User did not enroll this course"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 해당 강좌에 order_in_course 가 있는지 체크 -> 아니면 예외처리
+    if int(course.video_count()) < int(order_in_course): # 에러!
+        return Response({"error": "This order_in_course is invalid!"}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+        video = Video.objects.get(course_id=course_id, order_in_course=order_in_course) # 일치하는 비디오 객체 반환
+
+    videoCompletion, created = VideoCompletion.objects.get_or_create( # videoCompletion: 검색되거나, 새로 생성된 객체 가르키는 변수          
+        user = user,                                                  # created: 객체가 새로 생성되었으면 True, 기존에 존재했으면 False
+        video = video
+    )
+
+    if created: # 새로 생성이 된 것이면
+        videoCompletion.save()  # VideoCompletion 객체 생성 후 저장
+
+    # Serializer를 사용해 JSON 응답 생성
+    serializer = VideoCompletionSerializer(videoCompletion)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+# 16 구매 여부와 상관없이 특정 한 강좌의 대한 기본 정보를 반환하는 API(GET)
+@api_view(['GET'])
+@permission_classes([permissions.AllowAny])
+def basic_cource_info(request): # 쿼리 파라미터로 받아야 할 정보: course_id
+    course_id = request.GET.get('course_id')
+
+    try:
+        course = Course.objects.get(id = course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
+    
+        # Serializer를 사용해 JSON 응답 생성
+    serializer = CourseSerializer(course)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# 17. 특정 강좌를 구매한 로그인한 수강자가 보는 강의 리스트와 수강률 반환하는 API (GET)
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,)) 
+def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야 할 정보: course_id
+    user = request.user
+    course_id = request.GET.get('course_id')
+
+    try: # 해당 강좌가 있는지 체크
+        course = Course.objects.get(id = course_id)
+    except ObjectDoesNotExist:
+        return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try: # 해당 user가 이 강의를 수강하고 있는지 체크
+        enroll = Enroll.objects.get(course_id = course_id, user = user)
+    except ObjectDoesNotExist:
+        return Response({"error": "The User does not enroll the Course"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    video_list = course.video.all() # 역참조로 course와 연결된 비디오들 다 가져오기
+    
+    # 수강률을 계산하기 위해 completion_rate 메서드를 사용
+    completion_rate = course.completion_rate(user)
+
+    # 각 비디오가 수강 완료되었는지 여부 넣어서 확인
+    video_completion_data = []
+    for video in video_list:
+        video_data = {
+            "id": video.id,
+            "title": video.title,
+            "order_in_course": video.order_in_course,
+            "completed": VideoCompletion.objects.filter(user=user, video=video).exists()
+        }
+        video_completion_data.append(video_data)
+
+    # 수강률과 비디오 수강 완료 정보를 반환
+    response_data = {
+        "completion_rate": completion_rate,  # 수강률
+        "videos": video_completion_data      # 각 비디오 별 수강 확인
+    }
+
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+
+# 18. 로그인한 수강자의 지금까지 총 이수 학점이 얼마인지 계산하여 반환하는 API(마이페이지에 쓸 것, GET)
+
+
 
 
