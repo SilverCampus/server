@@ -15,8 +15,8 @@ urlpatterns = [
     path('update-course-description/', update_course_description, name='update-course-description'),    # 11번,
     path('get-course-videos/', get_course_videos, name='get-course-videos'),      # 12번, api 문서 Ok
     path('get-recently-watched-courses/', get_recently_watched_courses, name='get-recently-watched-courses'),    # 13번, 
-    path('recently-liked-course/', recently_liked_course, name='recently-liked-course'),     # 14번,
-    path('video-completion/', video_completion, name='video-completion'),         # 15번,
-    path('basic-cource-info/', basic_cource_info, name='basic-cource-info'),      # 16번,
-    path('get-course-list-completion-rate/', get_course_list_completion_rate, name='get-course-list-completion-rate'), # 17번,
+    path('recently-liked-course/', recently_liked_course, name='recently-liked-course'),     # 14번, api 문서 Ok
+    path('video-completion/', video_completion, name='video-completion'),         # 15번, api 문서 Ok
+    path('basic-cource-info/', basic_cource_info, name='basic-cource-info'),      # 16번, api 문서 Ok
+    path('get-course-list-completion-rate/', get_course_list_completion_rate, name='get-course-list-completion-rate'), # 17번, api 문서 Ok
 ] 

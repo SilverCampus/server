@@ -199,7 +199,7 @@ def launch_course(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# 8. 선생님이 자신이 개설한 강좌에 새로운 영상 파일을 추가하는 API 
+# 8. 강사가 자신이 개설한 강좌에 새로운 영상 파일을 추가하는 API 
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def video_upload(request):  
@@ -475,7 +475,7 @@ def video_completion(request):
     except ObjectDoesNotExist:
         return Response({"error": "there is no Course"}, status=status.HTTP_400_BAD_REQUEST)
 
-    try:  # 해당 학생이 넘겨받은 수업 듣고 있는지 체크 -> 아니면 예외처리
+    try:  # 해당 학생이 넘겨받은 강좌를 듣고 있는지 체크 -> 아니면 예외처리
         enroll_check = Enroll.objects.get(course=course, user=user)
     except Enroll.DoesNotExist:
         return Response({"error": "User did not enroll this course"}, status=status.HTTP_400_BAD_REQUEST)
@@ -493,6 +493,14 @@ def video_completion(request):
 
     if created: # 새로 생성이 된 것이면
         videoCompletion.save()  # VideoCompletion 객체 생성 후 저장
+
+        # 여기에서 User의 total_credits을 업데이트하고, 이 업데이트 결과에 따라서 등급을 결정하도록 수정하기!!
+        
+        completion_rate = course.completion_rate(user)
+        if completion_rate == 100:
+            user.total_credits += course.credits    
+            user.save()  # 그리고 저장!!
+
 
     # Serializer를 사용해 JSON 응답 생성
     serializer = VideoCompletionSerializer(videoCompletion)
@@ -557,7 +565,6 @@ def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야
     return Response(response_data, status=status.HTTP_200_OK)
 
 
-# 18. 로그인한 수강자의 지금까지 총 이수 학점이 얼마인지 계산하여 반환하는 API(마이페이지에 쓸 것, GET)
 
 
 
