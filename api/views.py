@@ -438,7 +438,7 @@ def get_recently_watched_courses(request):
     if recently_watched:
         first_course_id = recently_watched[0].course_id
     else:
-        return Response({"message": "No recently watched courses found."}, status=404)
+        return Response({"message":"No recently watched course found."}, status=404)
     
     # first_course_id에 해당하는 course를 response
     try:
