@@ -13,3 +13,6 @@ pip install python-dotenv
 pip install boto3 
 pip install django-storages
 pip install django-cors-headers
+
+#영상 썸네일 관련
+pip install moviepy

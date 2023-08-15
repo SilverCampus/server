@@ -7,6 +7,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from campus.models import User
+from moviepy.editor import VideoFileClip
+import os
+from django.core.files import File
+from django.core.files.base import ContentFile
+
 
 class BoardPostViewSet(viewsets.ModelViewSet):
     queryset = BoardPost.objects.all()
@@ -85,7 +90,7 @@ def add_like(request):
     serializer = BoardPostLikeSerializer(like)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-#. 4. 로그인한 사용자가 새로운 게시글을 게시하는 API
+# 4. 로그인한 사용자가 새로운 게시글을 게시하는 API
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,))
 def post_upload(request):
@@ -97,6 +102,7 @@ def post_upload(request):
     image_file = request.FILES.get('image_file')
     video_file = request.FILES.get('video_file')
 
+    # 게시물 저장
     post = BoardPost(
         user = user,
         title = title,
@@ -104,6 +110,17 @@ def post_upload(request):
         image = image_file,
         video = video_file,
     )
+
+    # 영상에서 썸네일 생성
+    if video_file:
+        with VideoFileClip(video_file.temporary_file_path()) as clip:
+            thumbnail_path = os.path.join("/tmp", f"thumb_{os.path.basename(video_file.name)}.png")
+            clip.save_frame(thumbnail_path, t=1.00)  # 1초 지점의 프레임 저장
+
+            with open(thumbnail_path, 'rb') as thumb_file:
+                # 썸네일을 Django의 FileField로 변환하여 저장
+                post.image.save(f"thumb_{video_file.name}.png", ContentFile(thumb_file.read()))
+                os.remove(thumbnail_path)  # 임시 썸네일 파일 삭제
 
     post.save()
 
