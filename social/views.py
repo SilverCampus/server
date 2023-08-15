@@ -1,6 +1,8 @@
 from rest_framework import viewsets
 from .models import BoardPost, BoardComment, BoardPostLike
-from .serializers import BoardPostSerializer, BoardCommentSerializer, BoardPostLikeSerializer, AuthorSerializer, PostCommentSerializer
+from .serializers import (
+    BoardPostSerializer, BoardCommentSerializer, BoardPostLikeSerializer, AuthorSerializer, PostCommentSerializer,
+    PostUploadSerializer)
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -81,4 +83,29 @@ def add_like(request):
     like.save()
     
     serializer = BoardPostLikeSerializer(like)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+#. 4. 로그인한 사용자가 새로운 게시글을 게시하는 API
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def post_upload(request):
+    user = request.user
+
+    # 프론트엔드로부터 넘겨받는 정보: title, content, image_file, video_file
+    title = request.data.get('title')
+    content = request.data.get('content')
+    image_file = request.FILES.get('image_file')
+    video_file = request.FILES.get('video_file')
+
+    post = BoardPost(
+        user = user,
+        title = title,
+        content = content,
+        image = image_file,
+        video = video_file,
+    )
+
+    post.save()
+
+    serializer = PostUploadSerializer(post)
     return Response(serializer.data, status=status.HTTP_201_CREATED)

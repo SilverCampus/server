@@ -13,5 +13,6 @@ urlpatterns = [
     path('get-post-details/', get_post_details, name='get-post-details'),
     path('add_comment/', views.add_comment, name='add_comment'),
     path('add_like/', views.add_like, name='add_like'),
+    path('post_upload/', post_upload, name='post_upload'),
 ]
 
