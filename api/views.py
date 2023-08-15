@@ -6,7 +6,7 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 AnswerQuestionSerializer, CourseDescriptionUpdateSerializer,
                                 GetCourseVideoSerializer, LikedCoursesSerializer,
                                 GetRecentlyWatchedCoursesSerializer, CourseSerializer,
-                                VideoCompletionSerializer)
+                                VideoCompletionSerializer, GetQuestionList)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -68,8 +68,9 @@ class CourseVideoListView(ListAPIView):
 @permission_classes([permissions.IsAuthenticated])
 def course_enroll(request):
     user = request.user
-    if user.is_instructor: # User가 강사가 아니라면
-        return Response({"error": "User is Instructor"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # if user.is_instructor: # User가 강사라면
+    #     return Response({"error": "User is Instructor"}, status=status.HTTP_400_BAD_REQUEST)
 
     course_id = request.data.get('course_id')  # request.data가 request.POST보다 일반적
 
@@ -152,6 +153,7 @@ def liked_courses(request):
 @permission_classes((permissions.IsAuthenticated,))
 def launch_course(request):
     user = request.user
+
     if not user.is_instructor: # User가 강사가 아니라면
         return Response({"error": "User is not Instructor"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -266,8 +268,8 @@ def video_upload(request):
 def ask_question(request):
     user = request.user
 
-    if user.is_instructor: # User가 강사라면 -> 예외처리
-        return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
+    # if user.is_instructor: # User가 강사라면 -> 예외처리
+    #     return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
 
     # 프론트엔드로부터 넘겨받는 정보: title, content, course(id)
     title = request.data.get('title')
@@ -389,8 +391,8 @@ def get_course_videos(request): # 프론트로부터 받아야할 것들: course
     course_id = request.GET.get('course_id')
     order_in_course = request.GET.get('order_in_course')
 
-    if user.is_instructor: # User가 강사라면 -> 예외처리
-        return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
+    # if user.is_instructor: # User가 강사라면 -> 예외처리
+    #     return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
 
     try: # 수강자가 해당 강좌를 듣고 있는지 체크 -> 예외처리
         enroll = Enroll.objects.get(user=user, course_id=course_id)
@@ -510,8 +512,8 @@ def video_completion(request):
     course_id = request.data.get('course_id')
     order_in_course = request.data.get('order_in_course')
 
-    if user.is_instructor:  # User가 강사라면 -> 예외처리
-        return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
+    # if user.is_instructor:  # User가 강사라면 -> 예외처리
+    #     return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
     
     try:  # 해당 강좌 뽑아 오기
         course = Course.objects.get(id=course_id)
@@ -608,8 +610,31 @@ def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야
     return Response(response_data, status=status.HTTP_200_OK)
 
 
-# 18. 로그인한 사용자(수강자)가 자신의 마이페이지에 들어갈 때, 로그인할 때, enroll된 강좌들 중 수강률이 100%가 된 애들의
-# 크레딧이 User에 각각 올라가도록 하는 것
+# 18. 한 강좌에 연결되어있는 Question 리스트 반환 (GET)
+@api_view(['GET'])
+def get_question_list(request):
+    course_id = request.GET.get('course_id')
+
+    if course_id is None:
+        return Response({"message": "course_id is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+    question_list = Question.objects.filter(course_id=course_id)
+
+    if not question_list:
+        return Response({"message": "No questions found for the given course_id."}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = GetQuestionList(question_list, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# 19. 한 question에 있는 comment들 리스트 반환
+@api_view(['GET'])
+def get_question_detail(request):
+    pass
+
+
+
+
 
 
 
