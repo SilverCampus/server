@@ -619,7 +619,7 @@ def get_question_list(request):
     question_list = Question.objects.filter(course_id=course_id)
 
     if not question_list:
-        return Response({"message": "No questions found for the given course_id."}, status=status.HTTP_404_NOT_FOUND)
+        return Response({"data": None}, status=status.HTTP_200_OK)
 
     serializer = GetQuestionListSerializer(question_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)

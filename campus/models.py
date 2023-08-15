@@ -16,7 +16,7 @@ class User(AbstractUser):
 
     GRADES = [
         ('Freshman', '새내기'),
-        ('Undergraduate', '학부생'),
+        ('Undergraduate', '학부생'), 
         ('Bachelor', '학사'),
         ('Master', '석사'),
         ('Doctorate', '박사'),
