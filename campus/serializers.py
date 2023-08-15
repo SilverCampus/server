@@ -208,3 +208,17 @@ class VideoCompletionSerializer(serializers.ModelSerializer):
     class Meta:
         model = VideoCompletion
         fields = '__all__'
+
+
+class GetQuestionList(serializers.ModelSerializer):
+    nickname = serializers.SerializerMethodField() # nickname 필드 추가
+    class Meta:
+        model = Question
+        fields  = ['id', 'nickname', 'title']
+
+    def get_nickname(self, obj):
+        return obj.student.nickname
+
+
+
+        

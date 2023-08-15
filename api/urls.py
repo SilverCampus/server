@@ -20,4 +20,5 @@ urlpatterns = [
     path('video-completion/', video_completion, name='video-completion'),         # 15번, api 문서 Ok
     path('basic-cource-info/', basic_cource_info, name='basic-cource-info'),      # 16번, api 문서 Ok
     path('get-course-list-completion-rate/', get_course_list_completion_rate, name='get-course-list-completion-rate'), # 17번, api 문서 Ok
+    path('get-question-list/', get_question_list, name='get-question-list'),      # 18번, 
 ] 
