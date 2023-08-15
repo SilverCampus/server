@@ -1,12 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import  AbstractUser
 
+# def validate_unique_nickname(value):
+#     if value and User.objects.filter(nickname=value).exists():
+#         raise ValidationError('This nickname is already in use.')
+
 # 커스티마이징 한 User
 class User(AbstractUser):
     address = models.CharField(max_length=100, null=True, blank=True)
     phone = models.CharField(max_length=20, null=True, blank=True)
     birth_date = models.DateField(null=True, blank=True) # 생일
-    nickname = models.CharField(max_length=30, null=True, blank=True) # 사용자의 닉네임
+    nickname = models.CharField(max_length=30, unique=True) # 사용자의 닉네임 validators=[validate_unique_nickname]
     is_instructor = models.BooleanField(default=True)  # 슈퍼 유저 만들 때 자동으로 is_instructor True
     total_credits = models.IntegerField(default=0)  # 총 이수 학점 필드 추가, 초기값은 0
 
