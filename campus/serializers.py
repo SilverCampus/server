@@ -210,7 +210,7 @@ class VideoCompletionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class GetQuestionList(serializers.ModelSerializer):
+class GetQuestionListSerializer(serializers.ModelSerializer):
     nickname = serializers.SerializerMethodField() # nickname 필드 추가
     class Meta:
         model = Question
@@ -219,6 +219,29 @@ class GetQuestionList(serializers.ModelSerializer):
     def get_nickname(self, obj):
         return obj.student.nickname
 
+class QuestionCommentSerializer(serializers.ModelSerializer):
+    instructor_nickname = serializers.SerializerMethodField()
+    class Meta:
+        model = Comment
+        fields = ['content', 'question', 'instructor_nickname']
+
+    def get_instructor_nickname(self, obj):
+        return obj.instructor.nickname
 
 
+class GetQuestionDetailSerializer(serializers.ModelSerializer):
+    comments = serializers.SerializerMethodField() # comments 필드 추가
+    student_nickname = serializers.SerializerMethodField() # comments 필드 추가
+    class Meta:
+        model = Question
+        fields = ['id', 'title', 'content', 'student_nickname', 'course', 'comments']
+
+    def get_comments(self, obj):
+        comments = Comment.objects.filter(question=obj)
+        return QuestionCommentSerializer(comments, many=True).data  
+
+    def get_student_nickname(self, obj):
+        return obj.student.nickname
         
+
+

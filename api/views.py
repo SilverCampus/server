@@ -6,7 +6,8 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 AnswerQuestionSerializer, CourseDescriptionUpdateSerializer,
                                 GetCourseVideoSerializer, LikedCoursesSerializer,
                                 GetRecentlyWatchedCoursesSerializer, CourseSerializer,
-                                VideoCompletionSerializer, GetQuestionList)
+                                VideoCompletionSerializer, GetQuestionListSerializer, 
+                                GetQuestionDetailSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -469,7 +470,7 @@ def get_course_videos(request): # 프론트로부터 받아야할 것들: course
 #     return Response(serializer.data)
 
 
-# 13, 14번 뷰 합친 새로운 뷰
+# 13. 로그인한 수강자의 가장 최근 수강한 강좌와 가장 최근 찜한 강좌 각각 반환
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
 def get_user_courses(request):
@@ -504,7 +505,7 @@ def get_user_courses(request):
     return Response(response_data, status=status.HTTP_200_OK)
 
 
-# 15. 로그인한 수강자가 특정 강좌의 특정 강의에 대한 수강 완료 체크하는 API (POST)
+# 14. 로그인한 수강자가 특정 강좌의 특정 강의에 대한 수강 완료 체크하는 API (POST)
 @api_view(['POST'])
 @permission_classes((permissions.IsAuthenticated,)) # 프론트로부터 받아야할 것들: course_id, order_in_course 
 def video_completion(request):
@@ -552,7 +553,7 @@ def video_completion(request):
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
-# 16 구매 여부와 상관없이 특정 한 강좌에 대한 기본 정보를 반환하는 API(GET)
+# 15. 구매 여부와 상관없이 특정 한 강좌에 대한 기본 정보를 반환하는 API(GET)
 @api_view(['GET'])
 @permission_classes([permissions.AllowAny])
 def basic_cource_info(request): # 쿼리 파라미터로 받아야 할 정보: course_id
@@ -568,7 +569,7 @@ def basic_cource_info(request): # 쿼리 파라미터로 받아야 할 정보: c
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# 17. 수강자가 구매한 강좌의 비디오 리스트 수강여부와 해당 강좌 수강률 반환하는 API (GET)
+# 16. 수강자가 구매한 강좌의 비디오 리스트 수강여부와 해당 강좌 수강률 반환하는 API (GET)
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,)) 
 def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야 할 정보: course_id
@@ -610,7 +611,7 @@ def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야
     return Response(response_data, status=status.HTTP_200_OK)
 
 
-# 18. 한 강좌에 연결되어있는 Question 리스트 반환 (GET)
+# 17. 한 강좌에 연결되어있는 Question 리스트 반환 (GET)
 @api_view(['GET'])
 def get_question_list(request):
     course_id = request.GET.get('course_id')
@@ -623,18 +624,28 @@ def get_question_list(request):
     if not question_list:
         return Response({"message": "No questions found for the given course_id."}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = GetQuestionList(question_list, many=True)
+    serializer = GetQuestionListSerializer(question_list, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# 19. 한 question에 있는 comment들 리스트 반환
+# 18. 한 question 객체에 대한 상세 정보 반환 + 해당 Question에 연결된 comment들까지 같이 반환
 @api_view(['GET'])
 def get_question_detail(request):
-    pass
+    question_id = request.GET.get('question_id') # 쿼리파라미터로 넘겨주기 
+
+    try:
+        question_detail = Question.objects.get(id=question_id)
+    except Question.DoesNotExist:
+        return Response({"error": "There is no such question"}, status=status.HTTP_400_BAD_REQUEST)
+
+    serializer = GetQuestionDetailSerializer(question_detail)
+
+    return Response(serializer.data)
 
 
+    
+    
 
 
-
-
+    
 
