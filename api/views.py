@@ -424,47 +424,82 @@ def get_course_videos(request): # 프론트로부터 받아야할 것들: course
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-# 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연)
+# # 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연)
+# @api_view(['GET'])
+# @permission_classes((permissions.IsAuthenticated,))
+# def get_recently_watched_courses(request):
+#     user = request.user
+#     recently_watched = RecentlyWatched.objects.filter(user=user).order_by('-watched_at')
+
+#     if user.is_instructor: # User가 강사라면 에러
+#         return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
+    
+#     # 가장 최근에 시청한 강좌 id를 first_course_id에 저장
+#     if recently_watched:
+#         first_course_id = recently_watched[0].course_id
+#     else:
+#         return Response({}, status=200)
+    
+#     # first_course_id에 해당하는 course를 response
+#     try:
+#         course = Course.objects.get(id=first_course_id)
+#     except Course.DoesNotExist: 
+#         return Response({"error": "Course not found."}, status=404)
+    
+#     serializer = GetRecentlyWatchedCoursesSerializer(course, many=False) 
+#     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# # 14. 로그인한 수강자의 가장 최근에 찜한 강의를 반환해주는 API (규빈)
+# @api_view(['GET'])
+# @permission_classes((permissions.IsAuthenticated,)) 
+# def recently_liked_course(request):
+#     # 사용자가 좋아요를 누른 강의 중 가장 최근 것을 가져옴
+#     recent_liked = Like.objects.filter(user=request.user).order_by('-id').first()
+
+#     # 만약 찜한 강의가 없으면 빈 응답을 반환
+#     if not recent_liked:
+#         return Response({"detail": "No recent liked course found."}, status=404)
+
+#     course = recent_liked.course
+#     serializer = CourseSerializer(course)
+
+#     return Response(serializer.data)
+
+
+# 13, 14번 뷰 합친 새로운 뷰
 @api_view(['GET'])
 @permission_classes((permissions.IsAuthenticated,))
-def get_recently_watched_courses(request):
+def get_user_courses(request):
     user = request.user
-    recently_watched = RecentlyWatched.objects.filter(user=user).order_by('-watched_at')
 
-    if user.is_instructor: # User가 강사라면 에러
+    if user.is_instructor:
         return Response({"error": "User is not Student"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    # 가장 최근에 시청한 강좌 id를 first_course_id에 저장
-    if recently_watched:
-        first_course_id = recently_watched[0].course_id
-    else:
-        return Response({"message":"No recently watched course found."}, status=404)
-    
-    # first_course_id에 해당하는 course를 response
+
+    # 최근에 시청한 강좌를 가져옴
+    recently_watched = RecentlyWatched.objects.filter(user=user).order_by('-watched_at')
+    first_course_id = recently_watched[0].course_id if recently_watched else None
+
     try:
-        course = Course.objects.get(id=first_course_id)
-    except Course.DoesNotExist: 
+        recently_watched_course = Course.objects.get(id=first_course_id) if first_course_id else None
+    except Course.DoesNotExist:
         return Response({"error": "Course not found."}, status=404)
-    
-    serializer = GetRecentlyWatchedCoursesSerializer(course, many=False) 
-    return Response(serializer.data, status=status.HTTP_200_OK)
 
-
-# 14. 로그인한 수강자의 가장 최근에 찜한 강의를 반환해주는 API (규빈)
-@api_view(['GET'])
-@permission_classes((permissions.IsAuthenticated,)) 
-def recently_liked_course(request):
-    # 사용자가 좋아요를 누른 강의 중 가장 최근 것을 가져옴
+    # 최근에 좋아요를 누른 강의를 가져옴
     recent_liked = Like.objects.filter(user=request.user).order_by('-id').first()
+    recently_liked_course = recent_liked.course if recent_liked else None
 
-    # 만약 찜한 강의가 없으면 빈 응답을 반환
-    if not recent_liked:
-        return Response({"detail": "No recent liked course found."}, status=404)
+    # 두 강좌를 직렬화
+    watched_serializer = GetRecentlyWatchedCoursesSerializer(recently_watched_course, many=False) if recently_watched_course else None
+    liked_serializer = CourseSerializer(recently_liked_course) if recently_liked_course else None
 
-    course = recent_liked.course
-    serializer = CourseSerializer(course)
+    # 함께 응답을 반환
+    response_data = {
+        "recently_watched": watched_serializer.data if watched_serializer else None,
+        "recently_liked": liked_serializer.data if liked_serializer else None,
+    }
 
-    return Response(serializer.data)
+    return Response(response_data, status=status.HTTP_200_OK)
 
 
 # 15. 로그인한 수강자가 특정 강좌의 특정 강의에 대한 수강 완료 체크하는 API (POST)
