@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from campus.models import Course, Category, Video, Like, Enroll, Comment, Question, User, RecentlyWatched, VideoCompletion
-
+from django.core.exceptions import ObjectDoesNotExist
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
@@ -55,6 +55,28 @@ class CourseSerializer(serializers.ModelSerializer):
     def get_instructor(self, obj):
         return obj.instructor.nickname
     
+
+class GetCourseListCompletionRateSerializer(serializers.ModelSerializer):
+    completed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Video
+        fields = ['id','title', 'video_file', 'course', 'order_in_course', 'completed']
+
+    def get_completed(self, obj):
+        user = self.context.get('user')
+        video_id = obj.id
+        try:
+            videocompletion = VideoCompletion.objects.get(user=user, video_id=video_id)
+        except ObjectDoesNotExist:
+            return False
+    
+        return True
+
+
+
+
+
 class VideoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Video
