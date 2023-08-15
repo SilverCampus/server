@@ -89,8 +89,6 @@ class VideoCompletionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-
-
 #######  api 앱 내에서 view 만들 때 쓰는 별도 시리얼라이즈들 ########
 
 # class UserRegisterSerializer(serializers.ModelSerializer):
@@ -119,6 +117,7 @@ class CourseVideoListSerializer(serializers.ModelSerializer):
 class PurchasedCoursesSerializer(serializers.ModelSerializer):
     video_count = serializers.SerializerMethodField() # video_count 시리얼라이즈 필드 추가
     completion_rate = serializers.SerializerMethodField() # completion_rate 시리얼라이즈 필드 추가
+    instructor = serializers.SerializerMethodField()
     class Meta:
         model = Course
         fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count', 'credits', 'completion_rate'] 
@@ -130,6 +129,9 @@ class PurchasedCoursesSerializer(serializers.ModelSerializer):
     def get_completion_rate(self, obj):
         user = self.context['request'].user  # 현재 로그인해 있는 사람의 정보를 가져옴!!
         return obj.completion_rate(user)
+    
+    def get_instructor(self, obj):
+        return obj.instructor.nickname
 
 class EnrollSerializer(serializers.ModelSerializer):
     class Meta:
