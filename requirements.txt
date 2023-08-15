@@ -16,4 +16,7 @@ pip install django-cors-headers
 
 #영상 썸네일 관련
 pip install moviepy
-brew install ffmpeg
+brew install ffmpeg    # 이거
+
+Amazon Linux / CentOS:
+sudo yum install -y ffmpeg
