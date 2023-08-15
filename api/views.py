@@ -7,7 +7,7 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 GetCourseVideoSerializer, LikedCoursesSerializer,
                                 GetRecentlyWatchedCoursesSerializer, CourseSerializer,
                                 VideoCompletionSerializer, GetQuestionListSerializer, 
-                                GetQuestionDetailSerializer)
+                                GetQuestionDetailSerializer, VideoSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -594,13 +594,10 @@ def get_course_list_completion_rate(request): # 쿼리 파라미터로 받아야
     # 각 비디오가 수강 완료되었는지 여부 넣어서 확인
     video_completion_data = []
     for video in video_list:
-        video_data = {
-            "id": video.id,
-            "title": video.title,
-            "order_in_course": video.order_in_course,
-            "completed": VideoCompletion.objects.filter(user=user, video=video).exists()
-        }
-        video_completion_data.append(video_data)
+        
+        serializer = VideoSerializer(video)
+
+        video_completion_data.append(serializer.data)
 
     # 수강률과 비디오 수강 완료 정보를 반환
     response_data = {
