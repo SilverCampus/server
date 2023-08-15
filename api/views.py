@@ -336,8 +336,8 @@ def answer_question(request):   # 프론트로부터 넘겨 받아야 할 정보
 
 # 11. 로그인한 선생님이 자신의 강좌의 description을 수정하는 API (정연)
 @api_view(['PATCH'])
-@permission_classes((permissions.IsAuthenticated,)) # courde_id를 url로 받음
-def update_course_description(request): # 프론트로부터 넘겨 받아야 할 정보: content(description 내용)
+@permission_classes((permissions.IsAuthenticated,)) # course_id를 url로 받음
+def update_course_description(request): # 프론트로부터 넘겨 받아야 할 정보: course_id, content(description 내용)
     user = request.user
     course_id = request.data.get('course_id')
 
@@ -360,6 +360,7 @@ def update_course_description(request): # 프론트로부터 넘겨 받아야 �
     category = course.category
     thumbnail = course.thumbnail
     is_live = course.is_live
+    credits = course.credits
     
     if description is not None:
         course = Course(
@@ -370,7 +371,8 @@ def update_course_description(request): # 프론트로부터 넘겨 받아야 �
             instructor = user,
             category = category,
             thumbnail = thumbnail,
-            is_live = is_live
+            is_live = is_live,
+            credits = credits
         ) # description 값 업데이트
 
         course.save()

@@ -12,4 +12,4 @@ sqlparse==0.4.4 ; python_version >= '3.5'
 pip install python-dotenv
 pip install boto3 
 pip install django-storages
-pip install corsheaders
+pip install django-cors-headers
