@@ -264,6 +264,12 @@ class GetQuestionDetailSerializer(serializers.ModelSerializer):
 
     def get_student_nickname(self, obj):
         return obj.student.nickname
+    
+class GetUserInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'nickname', 'is_instructor', 'total_credits', 'grade']
+        
         
 
 

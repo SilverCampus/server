@@ -7,7 +7,8 @@ from campus.serializers import (UserSerializer, SearchCoursesSerializer,
                                 GetCourseVideoSerializer, LikedCoursesSerializer,
                                 GetRecentlyWatchedCoursesSerializer, CourseSerializer,
                                 VideoCompletionSerializer, GetQuestionListSerializer, 
-                                GetQuestionDetailSerializer, GetCourseListCompletionRateSerializer)
+                                GetQuestionDetailSerializer, GetCourseListCompletionRateSerializer,
+                                GetUserInfoSerializer)
 
 from rest_framework.generics import ListAPIView, CreateAPIView
 
@@ -638,7 +639,17 @@ def get_question_detail(request):
 
     return Response(serializer.data)
 
+# 19번 access 토큰을 바탕으로 해당 유저 정보 반환해주는 뷰
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,)) 
+def get_user_info(request):
+    user = request.user
+    
+    serializer = GetUserInfoSerializer(user)
 
+    return Response(serializer.data, status=200)
+
+    
     
     
 
