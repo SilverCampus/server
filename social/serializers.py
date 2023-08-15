@@ -28,3 +28,8 @@ class PostCommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = BoardComment
         fields = ('comment_user', 'content', 'created_at')
+
+class PostUploadSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BoardPost
+        fields = '__all__'
