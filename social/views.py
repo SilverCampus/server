@@ -49,3 +49,36 @@ def get_post_details(request):
     
     return Response(post_data, status=status.HTTP_200_OK)
 
+# 2. 댓글 추가 비동기 API
+# 댓글 추가, 새로고침 안되도록
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def add_comment(request):
+    post_id = request.data.get('post_id')
+    content = request.data.get('content')
+    
+    post = BoardPost.objects.get(id=post_id)
+    
+    comment = BoardComment(post=post, user=request.user, content=content)
+    comment.save()
+    
+    serializer = BoardCommentSerializer(comment)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# 3. 좋아요 추가 비동기 API
+# 좋아요 추가, 새로고침 안되도록
+@api_view(['POST'])
+@permission_classes((permissions.IsAuthenticated,))
+def add_like(request):
+    post_id = request.data.get('post_id')
+    
+    post = BoardPost.objects.get(id=post_id)
+    
+    if BoardPostLike.objects.filter(post=post, user=request.user).exists():
+        return Response({'detail': 'Already liked.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    like = BoardPostLike(post=post, user=request.user)
+    like.save()
+    
+    serializer = BoardPostLikeSerializer(like)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
