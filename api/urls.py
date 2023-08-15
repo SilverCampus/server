@@ -22,4 +22,5 @@ urlpatterns = [
     path('get-course-list-completion-rate/', get_course_list_completion_rate, name='get-course-list-completion-rate'), # 16번, api 문서 Ok
     path('get-question-list/', get_question_list, name='get-question-list'),      # 17번, api 문서 Ok
     path('get-question-detail/', get_question_detail, name='get-question-detail'), # 18번,
+    path('get-user-info/', get_user_info, name='get-user-info'), # 19번,
 ] 
