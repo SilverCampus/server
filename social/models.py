@@ -7,6 +7,7 @@ class BoardPost(models.Model):
     content = models.TextField()
     image = models.ImageField(upload_to='social_posts/images/', null=True, blank=True)  
     video = models.FileField(upload_to='social_posts/videos/', null=True, blank=True)
+    video_thumbnail = models.ImageField(upload_to='social_posts/thumbnails/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
