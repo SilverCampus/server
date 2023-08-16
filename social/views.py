@@ -142,7 +142,7 @@ def post_upload(request):
     serializer = PostUploadSerializer(post)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-## 5. hashtag 선택
+## 5. hashtag 리스트 불러오는 api
 @api_view(['GET'])
 def hashtag_list(request):
     hashtags = Hashtag.objects.all()
