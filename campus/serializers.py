@@ -287,9 +287,10 @@ class QuestionCommentSerializer(serializers.ModelSerializer):
 class GetQuestionDetailSerializer(serializers.ModelSerializer):
     comments = serializers.SerializerMethodField() # comments 필드 추가
     student_nickname = serializers.SerializerMethodField() # comments 필드 추가
+    course_name = serializers.SerializerMethodField()
     class Meta:
         model = Question
-        fields = ['id', 'title', 'content', 'student_nickname', 'course', 'comments']
+        fields = ['id', 'title', 'content', 'student_nickname', 'course_name', 'comments']
 
     def get_comments(self, obj):
         comments = Comment.objects.filter(question=obj)
@@ -297,6 +298,9 @@ class GetQuestionDetailSerializer(serializers.ModelSerializer):
 
     def get_student_nickname(self, obj):
         return obj.student.nickname
+    
+    def get_course_name(self, obj):
+        return obj.course.title
     
 class GetUserInfoSerializer(serializers.ModelSerializer):
     class Meta:
