@@ -127,14 +127,25 @@ def course_like(request):
         return Response({"error": "Course not found"}, status=status.HTTP_404_NOT_FOUND)
     # 사용자가 로그인한 상태이므로 request.user에서 사용자 정보를 가져옵니다.
     user = request.user
-    # Enroll 객체를 생성합니다.
-    like = Like(course=course, user=user)
-    # DB에 저장합니다.
-    like.save()
-    # 응답을 위한 Serializer를 사용합니다.
-    serializer = LikeSerializer(like)
 
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
+    try:
+        like = Like.objects.get(user=user, course=course)
+    except ObjectDoesNotExist:
+        # Enroll 객체를 생성합니다.
+        like = Like(
+            course=course, user=user
+        )
+        # DB에 저장합니다.
+        like.save()
+        # 응답을 위한 Serializer를 사용합니다.
+        serializer = LikeSerializer(like)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    like.delete()  # 이렇게 하면 객체 사라져??
+    return Response({"data": "기존 찜 취소 함 ㅋ"}, status=status.HTTP_200_OK)
+
+    
 
 
 # 6. 로그인한 사용자가 찜한 강좌 목록들 반환하는 API
