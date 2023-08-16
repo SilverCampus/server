@@ -416,8 +416,6 @@ def get_course_videos(request):
     except ObjectDoesNotExist:
         return Response({"error": "This video not found."}, status=404)
     
-
-    
     try:
         course = Course.objects.get(id = course_id)
     except ObjectDoesNotExist:
@@ -441,16 +439,7 @@ def get_course_videos(request):
         'current_video': video_serializer.data,
         'else_videos': videos_serializer.data
     }
-
-
-
-    
     return Response(response_data, status=status.HTTP_200_OK)
-
-
-
-
-
 
 
 # # 13. 로그인한 수강자가 가장 최근에 수강한 강좌를 불러오는 API (정연)
