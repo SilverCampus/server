@@ -441,7 +441,15 @@ def get_course_videos(request):
         'current_video': video_serializer.data,
         'else_videos': videos_serializer.data
     }
+
+
+
+    
     return Response(response_data, status=status.HTTP_200_OK)
+
+
+
+
 
 
 
