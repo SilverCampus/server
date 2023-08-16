@@ -1,8 +1,8 @@
 from rest_framework import viewsets
-from .models import BoardPost, BoardComment, BoardPostLike
+from .models import BoardPost, BoardComment, BoardPostLike, Hashtag
 from .serializers import (
     BoardPostSerializer, BoardCommentSerializer, BoardPostLikeSerializer, AuthorSerializer, PostCommentSerializer,
-    PostUploadSerializer)
+    PostUploadSerializer, HashtagSerializer)
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework import permissions, status
 from rest_framework.response import Response
@@ -11,6 +11,7 @@ from moviepy.editor import VideoFileClip
 import os
 from django.core.files import File
 from django.core.files.base import ContentFile
+from rest_framework.generics import ListAPIView
 
 
 class BoardPostViewSet(viewsets.ModelViewSet):
@@ -96,11 +97,12 @@ def add_like(request):
 def post_upload(request):
     user = request.user
 
-    # 프론트엔드로부터 넘겨받는 정보: title, content, image_file, video_file
+    # 프론트엔드로부터 넘겨받는 정보: title, content, image_file, video_file, hashtags
     title = request.data.get('title')
     content = request.data.get('content')
     image_file = request.FILES.get('image_file')
     video_file = request.FILES.get('video_file')
+    hashtag_ids = request.data.get('hashtags', [])
 
     # 게시물 저장
     post = BoardPost(
@@ -110,6 +112,15 @@ def post_upload(request):
         image = image_file,
         video = video_file,
     )
+    post.save() # 이곳에서 먼저 저장해야 ManyToMany 관계가 정상적으로 작동합니다.
+
+    # 해시태그 연결
+    for hashtag_id in hashtag_ids:
+        try:
+            hashtag = Hashtag.objects.get(id=hashtag_id)
+            post.hashtags.add(hashtag)
+        except Hashtag.DoesNotExist:
+            pass  # 존재하지 않는 해시태그 ID인 경우 무시
 
     # 영상에서 썸네일 생성
     if video_file:
@@ -126,3 +137,18 @@ def post_upload(request):
 
     serializer = PostUploadSerializer(post)
     return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+## 5. hashtag 선택
+@api_view(['GET'])
+def hashtag_list(request):
+    hashtags = Hashtag.objects.all()
+    serializer = HashtagSerializer(hashtags, many=True)
+    return Response(serializer.data)
+
+## 6. hashtag 필터링
+class PostsByHashtag(ListAPIView):
+    serializer_class = BoardPostSerializer
+
+    def get_queryset(self):
+        hashtag_name = self.kwargs['hashtag_name']
+        return BoardPost.objects.filter(hashtags__name=hashtag_name)
