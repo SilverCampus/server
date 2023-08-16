@@ -1,0 +1,22 @@
+asgiref==3.7.2 ; python_version >= '3.7'
+django==4.2.4
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
+pillow==10.0.0
+pyjwt==2.8.0 ; python_version >= '3.7'
+pytz==2023.3
+sqlparse==0.4.4 ; python_version >= '3.5'
+
+
+# S3 관련 필수 설치 패키지
+pip install python-dotenv
+pip install boto3 
+pip install django-storages
+pip install django-cors-headers
+
+#영상 썸네일 관련
+pip install moviepy
+brew install ffmpeg    # 이거
+
+Amazon Linux / CentOS:
+sudo yum install -y ffmpeg
