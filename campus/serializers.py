@@ -45,6 +45,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class CourseSerializer(serializers.ModelSerializer):
     video_count = serializers.SerializerMethodField() # video_count 필드 추가
     instructor = serializers.SerializerMethodField()
+    # is_this_instructor = serializers.SerializerMethodField()
     class Meta:
         model = Course
         fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count', 'credits'] # video_count 필드를 포함
@@ -54,7 +55,46 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def get_instructor(self, obj):
         return obj.instructor.nickname
+
+class BasicCourceInfoSerializer(serializers.ModelSerializer):
     
+    video_count = serializers.SerializerMethodField() # video_count 필드 추가
+    instructor = serializers.SerializerMethodField()
+    is_this_instructor = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Course
+        fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count', 'credits', 'is_this_instructor', 'is_liked']
+
+    def get_video_count(self, obj):
+        return obj.video.count() # obj는 현재 Course 인스턴스입니다. video_count 메서드를 호출해 개수를 반환합니다.
+
+    def get_instructor(self, obj):
+        return obj.instructor.nickname
+    
+    def get_is_this_instructor(self, obj):
+        user = self.context.get('user')
+        
+        if obj.instructor == user:
+            return True
+        else:
+            return False
+        
+    def get_is_liked(self, obj):
+        user = self.context.get('user')
+        course = obj
+
+        try:
+            Like.objects.get(user = user, course=course)
+        except ObjectDoesNotExist:
+            return False
+        
+        return True
+            
+
+        
+
 
 class GetCourseListCompletionRateSerializer(serializers.ModelSerializer):
     completed = serializers.SerializerMethodField()
@@ -72,9 +112,6 @@ class GetCourseListCompletionRateSerializer(serializers.ModelSerializer):
             return False
     
         return True
-
-
-
 
 
 class VideoSerializer(serializers.ModelSerializer):
