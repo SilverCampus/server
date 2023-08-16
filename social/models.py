@@ -1,6 +1,12 @@
 from django.db import models
 from campus.models import User
 
+class Hashtag(models.Model):
+    name = models.CharField(max_length=255, unique=True)
+
+    def __str__(self):
+        return self.name
+
 class BoardPost(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
@@ -9,6 +15,7 @@ class BoardPost(models.Model):
     video = models.FileField(upload_to='social_posts/videos/', null=True, blank=True)
     video_thumbnail = models.ImageField(upload_to='social_posts/thumbnails/', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    hashtags = models.ManyToManyField(Hashtag, related_name='posts')
 
     def __str__(self):
         return self.title

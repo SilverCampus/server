@@ -1,8 +1,15 @@
 from rest_framework import serializers
-from .models import BoardPost, BoardComment, BoardPostLike
+from .models import BoardPost, BoardComment, BoardPostLike, Hashtag
 from campus.models import User
 
+class HashtagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Hashtag
+        fields = ('id', 'name')
+
 class BoardPostSerializer(serializers.ModelSerializer):
+    hashtags = HashtagSerializer(many=True)
+
     class Meta:
         model = BoardPost
         fields = '__all__'

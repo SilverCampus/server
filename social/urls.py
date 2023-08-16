@@ -14,5 +14,7 @@ urlpatterns = [
     path('add_comment/', views.add_comment, name='add_comment'),
     path('add_like/', views.add_like, name='add_like'),
     path('post_upload/', post_upload, name='post_upload'),
+    path('posts/tag/<str:hashtag_name>/', PostsByHashtag.as_view(), name='posts-by-hashtag'),
+    
 ]
 
