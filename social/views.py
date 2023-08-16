@@ -152,3 +152,12 @@ class PostsByHashtag(ListAPIView):
     def get_queryset(self):
         hashtag_name = self.kwargs['hashtag_name']
         return BoardPost.objects.filter(hashtags__name=hashtag_name)
+    
+# 7. 로그인한 사용자가 작성한 글을 가져오는 API
+@api_view(['GET'])
+@permission_classes((permissions.IsAuthenticated,))
+def my_posts(request):
+    user = request.user
+    posts = BoardPost.objects.filter(user=user).order_by('-created_at')  # 최신글부터 가져오기 위해 '-created_at' 사용
+    serializer = BoardPostSerializer(posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
