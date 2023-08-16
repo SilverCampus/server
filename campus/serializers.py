@@ -91,9 +91,6 @@ class BasicCourceInfoSerializer(serializers.ModelSerializer):
             return False
         
         return True
-            
-
-        
 
 
 class GetCourseListCompletionRateSerializer(serializers.ModelSerializer):
@@ -110,7 +107,6 @@ class GetCourseListCompletionRateSerializer(serializers.ModelSerializer):
             videocompletion = VideoCompletion.objects.get(user=user, video_id=video_id)
         except ObjectDoesNotExist:
             return False
-    
         return True
 
 
