@@ -40,7 +40,6 @@ def get_post_details(request):
     except BoardPost.DoesNotExist:
         return Response({"error": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    
     # 특정 post에 대한 댓글, 좋아요 정보 뽑아오기 
     comments = BoardComment.objects.filter(post=post)
     likes = BoardPostLike.objects.filter(post=post)
@@ -50,12 +49,17 @@ def get_post_details(request):
     comments_serializer = PostCommentSerializer(comments, many=True)
     likes_count = likes.count()
     
+    # 해시태그 정보 가져오기
+    hashtags_serializer = HashtagSerializer(post.hashtags.all(), many=True)
+    
     post_data = BoardPostSerializer(post).data
     post_data['author'] = author_serializer.data
     post_data['comments'] = comments_serializer.data
     post_data['likes'] = likes_count
+    post_data['hashtags'] = hashtags_serializer.data
     
     return Response(post_data, status=status.HTTP_200_OK)
+
 
 # 2. 댓글 추가 비동기 API
 # 댓글 추가, 새로고침 안되도록
