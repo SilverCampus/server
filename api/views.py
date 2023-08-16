@@ -38,6 +38,8 @@ def search_courses(request):
     courses = Course.objects.filter(title__icontains=keyword)
     courses_list = list(courses)
 
+
+
     try:
         category = Category.objects.get(name=keyword)
         related_courses = category.course.all()
