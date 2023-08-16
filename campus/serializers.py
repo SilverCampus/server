@@ -156,17 +156,32 @@ class VideoCompletionSerializer(serializers.ModelSerializer):
 #         fields = '__all__'
 
 class SearchCoursesSerializer(serializers.ModelSerializer):
-    video_count = serializers.SerializerMethodField() # video_count 필드 추가
-    instructor = serializers.SerializerMethodField()  # 
+    video_count = serializers.SerializerMethodField()
+    instructor = serializers.SerializerMethodField()   
+    is_liked = serializers.SerializerMethodField()
     class Meta:
         model = Course
-        fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count', 'credits'] # video_count 필드를 포함
+        fields = ['id', 'title', 'price', 'description', 'instructor', 'category', 'thumbnail', 'is_live', 'video_count', 'credits', 'is_liked'] # video_count 필드를 포함
 
     def get_video_count(self, obj):
         return obj.video.count() # obj는 현재 Course 인스턴스입니다. video_count 메서드를 호출해 개수를 반환합니다.
 
     def get_instructor(self, obj):
         return obj.instructor.nickname
+    
+    def get_is_liked(self, obj):
+        user = self.context.get('user')
+        course = obj
+
+        try:
+            Like.objects.get(user = user, course=course)
+        except ObjectDoesNotExist:
+            return False
+        
+        return True
+
+
+
 
 class CourseVideoListSerializer(serializers.ModelSerializer):
     class Meta:

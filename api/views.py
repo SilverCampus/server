@@ -27,9 +27,11 @@ from django.utils import timezone
 
 # 1. 특정 검색어를 입력하거나, 특정 카테고리의 이름을 쿼리 파라미터로 전달하면 관련된 강좌들 클라이언트에게 보내주는 API
 @api_view(['GET'])
-@permission_classes((permissions.AllowAny,))
+@permission_classes([permissions.IsAuthenticated])
 def search_courses(request):
     keyword = request.GET.get('keyword') # 쿼리 파라미터로 전달받아야 함!
+    user = request.user
+    
     if keyword is None:
         return Response({"message": "Keyword is required"}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -51,7 +53,7 @@ def search_courses(request):
         return Response({"message": "검색 결과가 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
     # 찾은 객체들을 시리얼라이즈
-    serializer = SearchCoursesSerializer(list(courses_set), many=True)
+    serializer = SearchCoursesSerializer(list(courses_set), many=True, context={'user': user})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
