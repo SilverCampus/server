@@ -416,6 +416,8 @@ def get_course_videos(request):
     except ObjectDoesNotExist:
         return Response({"error": "This video not found."}, status=404)
     
+
+    
     try:
         course = Course.objects.get(id = course_id)
     except ObjectDoesNotExist:
