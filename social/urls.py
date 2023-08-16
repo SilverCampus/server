@@ -15,7 +15,7 @@ urlpatterns = [
     path('add_like/', views.add_like, name='add_like'),
     path('post_upload/', post_upload, name='post_upload'),
     path('hashtags/', hashtag_list, name='hashtag-list'), 
-    path('posts/tag/<str:hashtag_name>/', PostsByHashtag.as_view(), name='posts-by-hashtag'),
+    path('posts/tag/<str:hashtag_name>/', views.posts_by_hashtag, name='posts-by-hashtag'),
     path('my-posts/', views.my_posts, name='my-posts'),
 
 ]

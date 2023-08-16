@@ -150,12 +150,12 @@ def hashtag_list(request):
     return Response(serializer.data)
 
 ## 6. hashtag 필터링
-class PostsByHashtag(ListAPIView):
-    serializer_class = BoardPostSerializer
-
-    def get_queryset(self):
-        hashtag_name = self.kwargs['hashtag_name']
-        return BoardPost.objects.filter(hashtags__name=hashtag_name)
+@api_view(['GET'])
+@permission_classes((permissions.AllowAny,))
+def posts_by_hashtag(request, hashtag_name):
+    posts = BoardPost.objects.filter(hashtags__name=hashtag_name)
+    serializer = BoardPostSerializer(posts, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
     
 # 7. 로그인한 사용자가 작성한 글을 가져오는 API
 @api_view(['GET'])
